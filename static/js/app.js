@@ -1385,15 +1385,25 @@ class SeasonsBite {
         if (stroke) ctx.stroke();
     }
 
-    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-        if (typeof text !== 'string') {
-            text = String(text || '');
+    wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+        let safeText = '';
+        if (typeof text === 'string') {
+            safeText = text;
+        } else if (text !== null && text !== undefined) {
+            try {
+                safeText = String(text);
+            } catch (e) {
+                safeText = '';
+            }
         }
-        if (!text) return;
+        
+        if (!safeText || typeof safeText !== 'string') return;
+        if (typeof safeText.split !== 'function') return;
 
-        const words = text.split('');
+        const words = safeText.split('');
         let line = '';
         let currentY = y;
+        let lineCount = 1;
 
         for (let n = 0; n < words.length; n++) {
             const testLine = line + words[n];
@@ -1401,9 +1411,14 @@ class SeasonsBite {
             const testWidth = metrics.width;
 
             if (testWidth > maxWidth && n > 0) {
+                if (maxLines && lineCount >= maxLines) {
+                    line = line.trimEnd() + '…';
+                    break;
+                }
                 ctx.fillText(line, x, currentY);
                 line = words[n];
                 currentY += lineHeight;
+                lineCount++;
             } else {
                 line = testLine;
             }
@@ -1868,12 +1883,7 @@ class SeasonsBite {
             
             ctx.fillStyle = '#666';
             ctx.font = '13px "Noto Sans SC", sans-serif';
-            const descLines = this.wrapText(dish.desc, cardWidth - 40, ctx);
-            let descY = y + 190;
-            for (let j = 0; j < Math.min(descLines.length, 3); j++) {
-                ctx.fillText(descLines[j], x + 20, descY);
-                descY += 20;
-            }
+            this.wrapText(ctx, dish.desc, x + 20, y + 190, cardWidth - 40, 20, 3);
         }
 
         ctx.fillStyle = '#7a5c52';
@@ -1902,31 +1912,18 @@ class SeasonsBite {
         ctx.closePath();
     }
 
-    wrapText(text, maxWidth, ctx) {
-        const words = text.split('');
-        const lines = [];
-        let currentLine = '';
-
-        for (let i = 0; i < words.length; i++) {
-            const testLine = currentLine + words[i];
-            const metrics = ctx.measureText(testLine);
-            
-            if (metrics.width > maxWidth && currentLine !== '') {
-                lines.push(currentLine);
-                currentLine = words[i];
+    truncateText(text, maxLength) {
+        if (typeof text !== 'string') {
+            if (text !== null && text !== undefined) {
+                try {
+                    text = String(text);
+                } catch (e) {
+                    return '';
+                }
             } else {
-                currentLine = testLine;
+                return '';
             }
         }
-        
-        if (currentLine) {
-            lines.push(currentLine);
-        }
-        
-        return lines;
-    }
-
-    truncateText(text, maxLength) {
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength - 1) + '…';
     }
