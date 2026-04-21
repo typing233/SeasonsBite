@@ -1,0 +1,160 @@
+{
+  "solar_terms": {
+    "spring": {
+      "terms": ["立春", "雨水", "惊蛰", "春分", "清明", "谷雨"],
+      "season_name": "春季",
+      "season_desc": "春回大地，万物复苏，宜清淡温补",
+      "meats": [
+        {"id": "sp_meat_1", "name": "春笋炒腊肉", "desc": "鲜嫩春笋配咸香腊肉，春天的味道", "image_hint": "spring bamboo shoots stir-fried with cured pork, Chinese style, fresh and vibrant"},
+        {"id": "sp_meat_2", "name": "香椿炒鸡蛋", "desc": "香椿嫩芽配金黄鸡蛋，香气扑鼻", "image_hint": "Chinese toon sprouts with scrambled eggs, spring delicacy, golden yellow"},
+        {"id": "sp_meat_3", "name": "韭菜炒虾仁", "desc": "春韭鲜嫩，虾仁清甜，色香味俱全", "image_hint": "chinese chives stir-fried with shrimp, fresh green and pink, appetizing"},
+        {"id": "sp_meat_4", "name": "荠菜丸子", "desc": "野生荠菜与鲜肉的完美融合", "image_hint": "shepherd's purse meatballs, homemade style, fresh herbs"},
+        {"id": "sp_meat_5", "name": "芦笋炒牛肉", "desc": "嫩绿芦笋配嫩滑牛肉，营养丰富", "image_hint": "asparagus stir-fried with beef slices, green and brown, healthy"},
+        {"id": "sp_meat_6", "name": "马兰头拌香干", "desc": "野生马兰头的清香，配上豆干的嚼劲", "image_hint": "kalimeris indica mixed with dried tofu, cold dish, refreshing"},
+        {"id": "sp_meat_7", "name": "虫草花蒸鸡", "desc": "春季温补佳品，鸡肉鲜嫩，虫草花滋补", "image_hint": "steamed chicken with cordyceps flowers, golden color, nourishing"},
+        {"id": "sp_meat_8", "name": "青蒜炒回锅肉", "desc": "青蒜的辛辣配上五花肉的香嫩", "image_hint": "twice-cooked pork with garlic sprouts, Sichuan style, rich flavor"}
+      ],
+      "vegetables": [
+        {"id": "sp_veg_1", "name": "清炒豌豆苗", "desc": "鲜嫩豌豆苗，清炒保留原汁原味", "image_hint": "stir-fried pea sprouts, bright green, simple and fresh"},
+        {"id": "sp_veg_2", "name": "凉拌菠菜", "desc": "春季菠菜最鲜嫩，凉拌清爽可口", "image_hint": "cold spinach salad with sesame, green and healthy"},
+        {"id": "sp_veg_3", "name": "蒜蓉西兰花", "desc": "西兰花配蒜蓉，营养美味", "image_hint": "broccoli with garlic sauce, green florets, healthy"},
+        {"id": "sp_veg_4", "name": "春笋炒木耳", "desc": "春笋配黑木耳，黑白分明，清爽可口", "image_hint": "bamboo shoots with black fungus, black and white, vegetarian"},
+        {"id": "sp_veg_5", "name": "清炒茼蒿", "desc": "茼蒿独特香气，清炒最佳", "image_hint": "stir-fried garland chrysanthemum, green leaves, aromatic"},
+        {"id": "sp_veg_6", "name": "凉拌蒲公英", "desc": "野生蒲公英，清热解毒，春季养生", "image_hint": "dandelion salad, wild herbs, healthy and detoxifying"}
+      ],
+      "soups": [
+        {"id": "sp_soup_1", "name": "春笋排骨汤", "desc": "春笋的清甜融入排骨的鲜香", "image_hint": "spring bamboo shoot and pork rib soup, clear broth, nourishing"},
+        {"id": "sp_soup_2", "name": "荠菜豆腐汤", "desc": "荠菜的清香与豆腐的嫩滑", "image_hint": "shepherd's purse and tofu soup, light green, refreshing"},
+        {"id": "sp_soup_3", "name": "山药红枣鸡汤", "desc": "春季温补，山药红枣配鸡肉", "image_hint": "chicken soup with yam and red dates, golden color, nourishing"},
+        {"id": "sp_soup_4", "name": "番茄蛋花汤", "desc": "经典家常，酸甜开胃", "image_hint": "tomato and egg drop soup, red and yellow, simple and delicious"},
+        {"id": "sp_soup_5", "name": "菠菜猪肝汤", "desc": "春季补血佳品，菠菜配猪肝", "image_hint": "spinach and pork liver soup, nourishing blood, healthy"},
+        {"id": "sp_soup_6", "name": "香菇鸡片汤", "desc": "香菇的鲜香与鸡肉的嫩滑", "image_hint": "mushroom and chicken slice soup, light broth, flavorful"}
+      ],
+      "staples": [
+        {"id": "sp_staple_1", "name": "阳春面", "desc": "清汤白面，撒上葱花，简单美味", "image_hint": "yangchun noodles, clear soup with green onions, simple and elegant"},
+        {"id": "sp_staple_2", "name": "韭菜盒子", "desc": "金黄酥脆的外皮，包裹着韭菜鸡蛋馅", "image_hint": "chinese chive pockets, golden crispy, stuffed with chives and eggs"},
+        {"id": "sp_staple_3", "name": "荠菜馄饨", "desc": "荠菜鲜肉馅，皮薄馅大", "image_hint": "shepherd's purse wontons, thin wrappers, hearty filling"},
+        {"id": "sp_staple_4", "name": "春笋粥", "desc": "春笋丁配白粥，清香养胃", "image_hint": "spring bamboo shoot congee, light and nourishing"},
+        {"id": "sp_staple_5", "name": "艾窝窝", "desc": "传统春季节日点心，糯米包裹豆沙", "image_hint": "aiwowo, glutinous rice balls with red bean paste, traditional snack"},
+        {"id": "sp_staple_6", "name": "葱油拌面", "desc": "葱油香浓，面条劲道", "image_hint": "scallion oil noodles, fragrant, simple and delicious"}
+      ]
+    },
+    "summer": {
+      "terms": ["立夏", "小满", "芒种", "夏至", "小暑", "大暑"],
+      "season_name": "夏季",
+      "season_desc": "炎炎夏日，宜清热解暑，清淡开胃",
+      "meats": [
+        {"id": "su_meat_1", "name": "苦瓜炒牛肉", "desc": "苦瓜清热，牛肉温补，完美搭配", "image_hint": "bitter melon stir-fried with beef, bitter and savory"},
+        {"id": "su_meat_2", "name": "冬瓜焖鸭", "desc": "冬瓜祛湿，鸭肉清热，夏季滋补", "image_hint": "winter melon braised duck, light and nourishing"},
+        {"id": "su_meat_3", "name": "蒜蓉开边虾", "desc": "鲜虾配蒜蓉，清蒸保留原汁原味", "image_hint": "steamed shrimp with garlic, fresh and aromatic"},
+        {"id": "su_meat_4", "name": "凉拌鸡丝", "desc": "鸡胸肉撕丝，凉拌清爽可口", "image_hint": "cold shredded chicken salad, light and refreshing"},
+        {"id": "su_meat_5", "name": "黄瓜炒肉片", "desc": "脆嫩黄瓜配嫩滑肉片，夏季家常", "image_hint": "cucumber stir-fried with pork slices, fresh and light"},
+        {"id": "su_meat_6", "name": "丝瓜炒鸡蛋", "desc": "丝瓜清甜，鸡蛋嫩滑，夏季必备", "image_hint": "luffa stir-fried with eggs, light green and yellow"},
+        {"id": "su_meat_7", "name": "白切鸡", "desc": "皮爽肉嫩，原汁原味，配上姜葱蘸料", "image_hint": "poached chicken, white cut style, with ginger scallion sauce"},
+        {"id": "su_meat_8", "name": "荷塘小炒", "desc": "莲藕、荷兰豆、胡萝卜、百合的清爽组合", "image_hint": "lotus pond stir-fry, colorful vegetables, fresh and healthy"}
+      ],
+      "vegetables": [
+        {"id": "su_veg_1", "name": "凉拌黄瓜", "desc": "拍碎黄瓜，蒜香麻辣，开胃解暑", "image_hint": "cold cucumber salad with garlic, refreshing and spicy"},
+        {"id": "su_veg_2", "name": "清炒空心菜", "desc": "夏季时令蔬菜，脆嫩爽口", "image_hint": "stir-fried water spinach, green leaves, garlicky"},
+        {"id": "su_veg_3", "name": "凉拌茄子", "desc": "蒸烂茄子，配上蒜汁和辣椒", "image_hint": "cold eggplant salad with garlic sauce, soft and flavorful"},
+        {"id": "su_veg_4", "name": "清炒苦瓜", "desc": "清热解毒，夏季养生首选", "image_hint": "stir-fried bitter melon, detoxifying, healthy"},
+        {"id": "su_veg_5", "name": "清炒丝瓜", "desc": "清甜丝瓜，夏季家常", "image_hint": "stir-fried luffa, light green, sweet and fresh"},
+        {"id": "su_veg_6", "name": "凉拌木耳", "desc": "黑木耳凉拌，配上蒜末和醋", "image_hint": "cold black fungus salad, with garlic and vinegar, refreshing"}
+      ],
+      "soups": [
+        {"id": "su_soup_1", "name": "冬瓜薏米排骨汤", "desc": "祛湿消肿，夏季养生汤", "image_hint": "winter melon and job's tears pork rib soup, light and nourishing"},
+        {"id": "su_soup_2", "name": "绿豆汤", "desc": "清热解暑，夏季必备甜品", "image_hint": "mung bean soup, cold or warm, sweet and refreshing"},
+        {"id": "su_soup_3", "name": "丝瓜蛋花汤", "desc": "丝瓜清甜，蛋花嫩滑", "image_hint": "luffa and egg drop soup, light green and yellow"},
+        {"id": "su_soup_4", "name": "冬瓜海带汤", "desc": "冬瓜祛湿，海带补碘", "image_hint": "winter melon and kelp soup, light and healthy"},
+        {"id": "su_soup_5", "name": "莲子百合银耳汤", "desc": "滋阴润肺，夏季甜品", "image_hint": "lotus seed lily white fungus soup, sweet and nourishing"},
+        {"id": "su_soup_6", "name": "紫菜蛋花汤", "desc": "简单快手，营养丰富", "image_hint": "seaweed and egg drop soup, simple and nutritious"}
+      ],
+      "staples": [
+        {"id": "su_staple_1", "name": "凉面", "desc": "冷面配麻酱、黄瓜丝，夏季开胃", "image_hint": "cold noodles with sesame sauce, cucumber, refreshing"},
+        {"id": "su_staple_2", "name": "扬州炒饭", "desc": "粒粒分明，配料丰富", "image_hint": "yangzhou fried rice, colorful, well-mixed"},
+        {"id": "su_staple_3", "name": "皮蛋瘦肉粥", "desc": "咸香可口，夏季养胃", "image_hint": "century egg and lean pork congee, savory and comforting"},
+        {"id": "su_staple_4", "name": "荷叶饭", "desc": "荷叶包裹，清香扑鼻", "image_hint": "lotus leaf wrapped rice, fragrant, with fillings"},
+        {"id": "su_staple_5", "name": "绿豆粥", "desc": "清热解暑，夏季主食", "image_hint": "mung bean congee, light green, refreshing"},
+        {"id": "su_staple_6", "name": "凉虾", "desc": "夏季特色小吃，红糖水配凉虾", "image_hint": "cold shrimp jelly, with brown sugar syrup, summer snack"}
+      ]
+    },
+    "autumn": {
+      "terms": ["立秋", "处暑", "白露", "秋分", "寒露", "霜降"],
+      "season_name": "秋季",
+      "season_desc": "秋高气爽，宜滋阴润燥，贴秋膘",
+      "meats": [
+        {"id": "au_meat_1", "name": "板栗烧鸡", "desc": "粉糯板栗配鲜嫩鸡肉，秋季滋补", "image_hint": "chestnut braised chicken, golden color, savory"},
+        {"id": "au_meat_2", "name": "莲藕排骨汤", "desc": "粉藕配排骨，秋季润燥首选", "image_hint": "lotus root and pork rib soup, pinkish white, nourishing"},
+        {"id": "au_meat_3", "name": "山药炒肉片", "desc": "山药脆嫩，肉片香滑", "image_hint": "yam stir-fried with pork slices, white and tender"},
+        {"id": "au_meat_4", "name": "桂花糯米藕", "desc": "糯米填满莲藕，淋上桂花糖", "image_hint": "osmanthus sticky rice lotus root, sweet dessert, golden syrup"},
+        {"id": "au_meat_5", "name": "柿子椒炒牛肉", "desc": "甜椒配牛肉，色香味俱全", "image_hint": "bell pepper stir-fried with beef, colorful and savory"},
+        {"id": "au_meat_6", "name": "白果炖鸡", "desc": "白果滋补，鸡肉鲜嫩", "image_hint": "ginkgo nut stewed chicken, light broth, nourishing"},
+        {"id": "au_meat_7", "name": "清蒸大闸蟹", "desc": "秋季蟹肥，清蒸最佳", "image_hint": "steamed hairy crab, autumn delicacy, red and orange"},
+        {"id": "au_meat_8", "name": "芋头烧鸭", "desc": "粉糯芋头配鸭肉，秋季温补", "image_hint": "taro braised duck, savory and comforting"}
+      ],
+      "vegetables": [
+        {"id": "au_veg_1", "name": "清炒茭白", "desc": "茭白脆嫩，秋季时令", "image_hint": "stir-fried wild rice stem, white and tender"},
+        {"id": "au_veg_2", "name": "清炒秋葵", "desc": "秋葵营养丰富，秋季最佳", "image_hint": "stir-fried okra, green, with sesame seeds"},
+        {"id": "au_veg_3", "name": "清炒南瓜", "desc": "南瓜甘甜，秋季养生", "image_hint": "stir-fried pumpkin, golden yellow, sweet"},
+        {"id": "au_veg_4", "name": "清炒胡萝卜", "desc": "胡萝卜营养丰富，护眼明目", "image_hint": "stir-fried carrots, orange, with garlic"},
+        {"id": "au_veg_5", "name": "清炒芹菜", "desc": "芹菜降压，秋季养生", "image_hint": "stir-fried celery, green, crispy"},
+        {"id": "au_veg_6", "name": "清炒西兰花", "desc": "西兰花营养丰富，秋季时令", "image_hint": "stir-fried broccoli, green florets, healthy"}
+      ],
+      "soups": [
+        {"id": "au_soup_1", "name": "雪梨银耳汤", "desc": "滋阴润肺，秋季甜品", "image_hint": "snow pear and white fungus soup, sweet and nourishing"},
+        {"id": "au_soup_2", "name": "萝卜排骨汤", "desc": "白萝卜配排骨，秋季润燥", "image_hint": "white radish and pork rib soup, light and nourishing"},
+        {"id": "au_soup_3", "name": "玉米胡萝卜鸡汤", "desc": "甜玉米配胡萝卜，营养丰富", "image_hint": "corn and carrot chicken soup, golden color, flavorful"},
+        {"id": "au_soup_4", "name": "百合莲子汤", "desc": "滋阴润肺，安神养心", "image_hint": "lily and lotus seed soup, sweet and comforting"},
+        {"id": "au_soup_5", "name": "山药排骨汤", "desc": "山药滋补，排骨鲜香", "image_hint": "yam and pork rib soup, light and nourishing"},
+        {"id": "au_soup_6", "name": "莲藕猪蹄汤", "desc": "莲藕粉糯，猪蹄滋补", "image_hint": "lotus root and pig trotter soup, rich and nourishing"}
+      ],
+      "staples": [
+        {"id": "au_staple_1", "name": "桂花糕", "desc": "桂花飘香，秋季点心", "image_hint": "osmanthus cake, white, with osmanthus flowers"},
+        {"id": "au_staple_2", "name": "红薯粥", "desc": "红薯甘甜，秋季养胃", "image_hint": "sweet potato congee, orange, sweet and warm"},
+        {"id": "au_staple_3", "name": "板栗粥", "desc": "板栗粉糯，秋季滋补", "image_hint": "chestnut congee, creamy, sweet"},
+        {"id": "au_staple_4", "name": "芋头饭", "desc": "粉糯芋头配米饭，香气扑鼻", "image_hint": "taro rice, savory, with taro chunks"},
+        {"id": "au_staple_5", "name": "南瓜饼", "desc": "南瓜香甜，外酥里糯", "image_hint": "pumpkin pancakes, golden, crispy outside"},
+        {"id": "au_staple_6", "name": "蒸饺", "desc": "皮薄馅大，秋季家常", "image_hint": "steamed dumplings, pork and vegetable filling"}
+      ]
+    },
+    "winter": {
+      "terms": ["立冬", "小雪", "大雪", "冬至", "小寒", "大寒"],
+      "season_name": "冬季",
+      "season_desc": "寒风凛冽，宜温补御寒，暖心暖胃",
+      "meats": [
+        {"id": "wi_meat_1", "name": "红烧羊肉", "desc": "冬季温补佳品，羊肉暖身", "image_hint": "braised lamb, red sauce, winter warming"},
+        {"id": "wi_meat_2", "name": "萝卜炖牛肉", "desc": "白萝卜配牛肉，冬季滋补", "image_hint": "radish stewed beef, hearty and nourishing"},
+        {"id": "wi_meat_3", "name": "糖醋排骨", "desc": "酸甜可口，冬季开胃", "image_hint": "sweet and sour pork ribs, red sauce, appetizing"},
+        {"id": "wi_meat_4", "name": "红烧狮子头", "desc": "大肉丸，汁多肉嫩", "image_hint": "braised meatballs, large, with brown sauce"},
+        {"id": "wi_meat_5", "name": "当归生姜羊肉汤", "desc": "冬季温补经典，当归生姜配羊肉", "image_hint": "lamb soup with angelica and ginger, nourishing"},
+        {"id": "wi_meat_6", "name": "红焖猪蹄", "desc": "猪蹄软糯，冬季美容养颜", "image_hint": "braised pig trotters, red sauce, rich flavor"},
+        {"id": "wi_meat_7", "name": "酱牛肉", "desc": "卤牛肉，切片冷食", "image_hint": "sauced beef, sliced, savory"},
+        {"id": "wi_meat_8", "name": "酸菜白肉", "desc": "东北名菜，酸菜配五花肉", "image_hint": "sauerkraut and pork, sour and savory"}
+      ],
+      "vegetables": [
+        {"id": "wi_veg_1", "name": "清炒白菜", "desc": "冬季白菜最甜嫩", "image_hint": "stir-fried cabbage, white and green, sweet"},
+        {"id": "wi_veg_2", "name": "清炒萝卜", "desc": "萝卜赛人参，冬季养生", "image_hint": "stir-fried radish, white, healthy"},
+        {"id": "wi_veg_3", "name": "蒜蓉娃娃菜", "desc": "娃娃菜清甜，配蒜蓉", "image_hint": "baby bok choy with garlic, tender and sweet"},
+        {"id": "wi_veg_4", "name": "清炒冬笋", "desc": "冬笋鲜嫩，冬季时令", "image_hint": "stir-fried winter bamboo shoots, white and tender"},
+        {"id": "wi_veg_5", "name": "清炒芥兰", "desc": "芥兰脆嫩，冬季养生", "image_hint": "stir-fried kale, green, with garlic"},
+        {"id": "wi_veg_6", "name": "清炒土豆丝", "desc": "酸辣土豆丝，家常经典", "image_hint": "stir-fried shredded potatoes, sour and spicy"}
+      ],
+      "soups": [
+        {"id": "wi_soup_1", "name": "羊肉汤", "desc": "冬季暖身首选，配上香菜", "image_hint": "lamb soup, white broth, with cilantro, warming"},
+        {"id": "wi_soup_2", "name": "萝卜排骨汤", "desc": "白萝卜配排骨，冬季润燥", "image_hint": "white radish and pork rib soup, light and nourishing"},
+        {"id": "wi_soup_3", "name": "老母鸡汤", "desc": "老母鸡炖汤，冬季滋补", "image_hint": "old hen soup, golden color, rich flavor"},
+        {"id": "wi_soup_4", "name": "生姜红糖水", "desc": "驱寒暖身，冬季必备", "image_hint": "ginger brown sugar tea, warm, soothing"},
+        {"id": "wi_soup_5", "name": "红枣桂圆汤", "desc": "补血养颜，冬季甜品", "image_hint": "red date and longan soup, sweet and nourishing"},
+        {"id": "wi_soup_6", "name": "猪骨汤", "desc": "大骨炖汤，冬季补钙", "image_hint": "pork bone soup, rich, with vegetables"}
+      ],
+      "staples": [
+        {"id": "wi_staple_1", "name": "饺子", "desc": "冬至吃饺子，传统习俗", "image_hint": "dumplings, boiled, with dipping sauce"},
+        {"id": "wi_staple_2", "name": "腊八粥", "desc": "腊八节传统，多种杂粮", "image_hint": "laba congee, mixed grains, sweet and hearty"},
+        {"id": "wi_staple_3", "name": "汤圆", "desc": "冬至元宵，团圆甜蜜", "image_hint": "tangyuan, glutinous rice balls, sweet soup"},
+        {"id": "wi_staple_4", "name": "手擀面", "desc": "手工面条，劲道十足", "image_hint": "handmade noodles, savory broth, warm"},
+        {"id": "wi_staple_5", "name": "烤红薯", "desc": "冬季街头小吃，香甜软糯", "image_hint": "roasted sweet potato, golden, sweet and soft"},
+        {"id": "wi_staple_6", "name": "糖炒栗子", "desc": "冬季零食，香甜粉糯", "image_hint": "sugar roasted chestnuts, golden brown, sweet"}
+      ]
+    }
+  }
+}
