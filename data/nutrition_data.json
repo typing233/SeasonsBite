@@ -1,0 +1,116 @@
+{
+  "foods": {
+    "chives": {
+      "name": "韭菜",
+      "chinese_name": "韭菜",
+      "category": "vegetable",
+      "nutrition": {
+        "calories": 26,
+        "protein": 2.4,
+        "fat": 0.4,
+        "carbohydrates": 4.5,
+        "fiber": 1.4,
+        "vitamin_a": 235,
+        "vitamin_c": 24,
+        "calcium": 42,
+        "iron": 1.6,
+        "unit": "per 100g"
+      },
+      "tcm_properties": {
+        "nature": "温",
+        "flavor": "辛",
+        "meridians": ["肝", "胃", "肾"],
+        "effects": ["温中开胃", "行气活血", "补肾助阳"],
+        "indications": ["脾胃虚寒", "食欲不振", "腰膝酸软"],
+        "contraindications": ["阴虚内热者慎用", "患有眼疾者不宜多食"]
+      },
+      "seasonal_benefits": {
+        "spring": "春季韭菜最为鲜嫩，温补阳气，顺应春生之气",
+        "summer": "夏季韭菜纤维较粗，可促进消化",
+        "autumn": "秋季韭菜质量下降，建议少食",
+        "winter": "冬季韭菜可温补肾阳"
+      }
+    },
+    "bamboo_shoots_spring": {
+      "name": "春笋",
+      "chinese_name": "春笋",
+      "category": "vegetable",
+      "nutrition": {
+        "calories": 25,
+        "protein": 2.4,
+        "fat": 0.1,
+        "carbohydrates": 5.1,
+        "fiber": 2.8,
+        "vitamin_c": 5,
+        "calcium": 8,
+        "iron": 2.4,
+        "unit": "per 100g"
+      },
+      "tcm_properties": {
+        "nature": "微寒",
+        "flavor": "甘",
+        "meridians": ["胃", "肺"],
+        "effects": ["清热化痰", "益气和胃", "利膈爽胃"],
+        "indications": ["肺热咳嗽", "胃热嘈杂", "食欲不振"],
+        "contraindications": ["脾胃虚寒者慎食", "尿路结石者不宜多食"]
+      },
+      "seasonal_benefits": {
+        "spring": "春季春笋应季而发，清热化痰，适合春季养生",
+        "summer": "夏季春笋较少，可清热解暑",
+        "autumn": "秋季春笋已过季",
+        "winter": "冬季无新鲜春笋"
+      }
+    }
+  },
+  "daily_reference": {
+    "adult_male": {
+      "calories": 2250,
+      "protein": 65,
+      "fat": 60,
+      "carbohydrates": 300,
+      "fiber": 30,
+      "vitamin_a": 800,
+      "vitamin_c": 100,
+      "calcium": 800,
+      "iron": 12,
+      "unit": "per day"
+    },
+    "adult_female": {
+      "calories": 1800,
+      "protein": 55,
+      "fat": 50,
+      "carbohydrates": 250,
+      "fiber": 25,
+      "vitamin_a": 700,
+      "vitamin_c": 100,
+      "calcium": 800,
+      "iron": 20,
+      "unit": "per day"
+    }
+  },
+  "health_scoring_system": {
+    "description": "根据中医养生和营养学维度，对用户的季节性饮食进行健康评分",
+    "scoring_dimensions": {
+      "seasonal_health": {
+        "name": "时令健康度",
+        "weight": 0.3,
+        "description": "评估饮食是否符合当季节气养生原则"
+      },
+      "nutritional_balance": {
+        "name": "营养均衡度",
+        "weight": 0.3,
+        "description": "评估饮食的营养成分是否均衡"
+      },
+      "tcm_harmony": {
+        "name": "中医调和度",
+        "weight": 0.25,
+        "description": "评估饮食是否符合中医阴阳调和原则"
+      },
+      "dietary_diversity": {
+        "name": "饮食多样性",
+        "weight": 0.15,
+        "description": "评估饮食的食物种类是否丰富多样"
+      }
+    }
+  }
+}
