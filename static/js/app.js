@@ -187,34 +187,38 @@ class SeasonsBite {
         });
 
         container.querySelectorAll('.dish-card-wrapper').forEach(wrapper => {
-            wrapper.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                    return;
-                }
-                const card = wrapper.querySelector('.dish-card');
-                card.classList.toggle('flipped');
-            });
+            this.bindCardEvents(wrapper);
+        });
+    }
+
+    bindCardEvents(wrapper) {
+        wrapper.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                return;
+            }
+            const card = wrapper.querySelector('.dish-card');
+            card.classList.toggle('flipped');
         });
 
-        container.querySelectorAll('.btn-redraw').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        const redrawBtn = wrapper.querySelector('.btn-redraw');
+        if (redrawBtn) {
+            redrawBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const wrapper = btn.closest('.dish-card-wrapper');
                 const dishType = wrapper.dataset.type;
                 const dishIndex = parseInt(wrapper.dataset.index);
                 this.redrawSingle(dishType, dishIndex, wrapper);
             });
-        });
+        }
 
-        container.querySelectorAll('.btn-lock').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        const lockBtn = wrapper.querySelector('.btn-lock');
+        if (lockBtn) {
+            lockBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const wrapper = btn.closest('.dish-card-wrapper');
                 const dishType = wrapper.dataset.type;
                 const dishIndex = parseInt(wrapper.dataset.index);
-                this.toggleLock(dishType, dishIndex, btn, wrapper);
+                this.toggleLock(dishType, dishIndex, lockBtn, wrapper);
             });
-        });
+        }
     }
 
     createCardHtml(dish, cardIndex) {
@@ -292,17 +296,39 @@ class SeasonsBite {
             const result = await response.json();
 
             if (result.success) {
+                const newDish = {
+                    ...result.data,
+                    type: dishType,
+                    index: dishIndex
+                };
+                
                 this.currentPackage[dishType][dishIndex] = result.data;
                 
-                const container = document.getElementById('cards-container');
-                container.innerHTML = '';
-                this.renderCards();
+                const newCardHtml = this.createCardHtml(newDish, 0);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newCardHtml;
+                const newWrapper = tempDiv.firstElementChild;
+                
+                wrapper.parentNode.replaceChild(newWrapper, wrapper);
+                
+                const newCard = newWrapper.querySelector('.dish-card');
+                if (newCard) {
+                    newCard.classList.add('flipped');
+                }
+                
+                this.bindCardEvents(newWrapper);
             }
         } catch (error) {
             console.error('Redraw failed:', error);
             alert('重抽失败，请重试');
         } finally {
-            redrawBtn.innerHTML = originalText;
+            const currentWrapper = document.querySelector(`[data-type="${dishType}"][data-index="${dishIndex}"]`);
+            if (currentWrapper) {
+                const currentBtn = currentWrapper.querySelector('.btn-redraw');
+                if (currentBtn) {
+                    currentBtn.innerHTML = '<span>🎲</span> 换一道';
+                }
+            }
         }
     }
 
