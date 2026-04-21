@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时节食匣 - 二十四节气盲盒抽卡</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">
+                    <span class="title-icon">🌸</span>
+                    时节食匣
+                    <span class="title-icon">🍃</span>
+                </h1>
+                <p class="subtitle">用浪漫与仪式感治愈你的吃饭选择困难症</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section id="season-info" class="season-section">
+                <div class="season-card">
+                    <div class="season-icon" id="season-icon">🌱</div>
+                    <div class="season-text">
+                        <h2 id="season-name">春季</h2>
+                        <p id="season-desc">春回大地，万物复苏，宜清淡温补</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="draw-section" class="draw-section">
+                <div class="package-selector">
+                    <h3>选择套餐规格</h3>
+                    <div class="package-options">
+                        <label class="package-option active" data-package="basic">
+                            <input type="radio" name="package" value="basic" checked>
+                            <div class="package-card">
+                                <div class="package-label">基础隐藏款</div>
+                                <div class="package-detail">1荤 + 1素 + 1汤 + 1主食</div>
+                            </div>
+                        </label>
+                        <label class="package-option" data-package="luxury">
+                            <input type="radio" name="package" value="luxury">
+                            <div class="package-card">
+                                <div class="package-label">豪华双荤款</div>
+                                <div class="package-detail">2荤 + 1素 + 1汤</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="draw-btn" class="draw-btn">
+                    <span class="btn-text">抽取今日食匣</span>
+                    <span class="btn-decoration">✨</span>
+                </button>
+            </section>
+
+            <section id="result-section" class="result-section" style="display: none;">
+                <div class="result-header">
+                    <h2 class="result-title">今日食匣</h2>
+                    <p class="result-subtitle" id="result-season"></p>
+                </div>
+
+                <div class="cards-container" id="cards-container">
+                </div>
+
+                <div class="action-bar">
+                    <button id="redraw-all-btn" class="action-btn secondary">
+                        <span>🎲</span> 重新抽取
+                    </button>
+                    <button id="generate-text-btn" class="action-btn primary">
+                        <span>📝</span> 生成文本
+                    </button>
+                    <button id="generate-screenshot-btn" class="action-btn primary">
+                        <span>📸</span> 生成截图
+                    </button>
+                </div>
+
+                <div id="text-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>菜单文本</h3>
+                            <button class="modal-close" id="close-text-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <pre id="menu-text"></pre>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="copy-text-btn" class="action-btn primary">
+                                <span>📋</span> 复制到剪贴板
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="screenshot-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>菜单截图</h3>
+                            <button class="modal-close" id="close-screenshot-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="screenshot-preview" class="screenshot-preview">
+                                <p>正在生成截图...</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="download-screenshot-btn" class="action-btn primary" style="display: none;">
+                                <span>💾</span> 下载截图
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>时节食匣 © 2024 | 结合二十四节气文化的盲盒抽卡体验</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
