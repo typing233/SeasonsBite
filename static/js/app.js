@@ -55,6 +55,15 @@ class SeasonsBite {
         });
     }
 
+    parseChineseDate(dateStr) {
+        if (!dateStr) return { month: 0, day: 0 };
+        const match = dateStr.match(/(\d+)月(\d+)日/);
+        if (match) {
+            return { month: parseInt(match[1]), day: parseInt(match[2]) };
+        }
+        return { month: 0, day: 0 };
+    }
+
     initCurrentTermDisplay() {
         const now = new Date();
         const month = now.getMonth() + 1;
@@ -63,13 +72,32 @@ class SeasonsBite {
         let termKey = null;
         if (this.solarTermsData && this.solarTermsData.solar_terms) {
             for (const [key, term] of Object.entries(this.solarTermsData.solar_terms)) {
-                const [startMonth, startDay] = term.date_range.start.split('-').map(Number);
-                const [endMonth, endDay] = term.date_range.end.split('-').map(Number);
+                let startMonth, startDay, endMonth, endDay;
                 
-                if ((month > startMonth || (month === startMonth && day >= startDay)) &&
-                    (month < endMonth || (month === endMonth && day <= endDay))) {
-                    termKey = key;
-                    break;
+                if (Array.isArray(term.date_range) && term.date_range.length >= 2) {
+                    const startDate = this.parseChineseDate(term.date_range[0]);
+                    const endDate = this.parseChineseDate(term.date_range[1]);
+                    startMonth = startDate.month;
+                    startDay = startDate.day;
+                    endMonth = endDate.month;
+                    endDay = endDate.day;
+                } else if (term.date_range && term.date_range.start) {
+                    const [sm, sd] = term.date_range.start.split('-').map(Number);
+                    const [em, ed] = term.date_range.end.split('-').map(Number);
+                    startMonth = sm;
+                    startDay = sd;
+                    endMonth = em;
+                    endDay = ed;
+                } else {
+                    continue;
+                }
+                
+                if (startMonth > 0 && endMonth > 0) {
+                    if ((month > startMonth || (month === startMonth && day >= startDay)) &&
+                        (month < endMonth || (month === endMonth && day <= endDay))) {
+                        termKey = key;
+                        break;
+                    }
                 }
             }
         }
@@ -83,7 +111,15 @@ class SeasonsBite {
 
             if (currentTermName) currentTermName.textContent = term.name;
             if (currentTermIcon) currentTermIcon.textContent = term.icon;
-            if (currentTermDate) currentTermDate.textContent = `${term.date_range.start} ~ ${term.date_range.end}`;
+            
+            let dateDisplay = '';
+            if (Array.isArray(term.date_range) && term.date_range.length >= 2) {
+                dateDisplay = `${term.date_range[0]} ~ ${term.date_range[1]}`;
+            } else if (term.date_range && term.date_range.start) {
+                dateDisplay = `${term.date_range.start} ~ ${term.date_range.end}`;
+            }
+            if (currentTermDate) currentTermDate.textContent = dateDisplay;
+            
             if (currentTermDesc) currentTermDesc.textContent = term.description;
         }
     }
@@ -1134,34 +1170,255 @@ class SeasonsBite {
         generateBtn.disabled = true;
 
         try {
-            const response = await fetch('/api/share-card', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    package_data: this.currentPackage,
-                    theme: this.selectedShareTheme
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                this.shareCardDataUrl = result.data.image_url;
-                this.renderShareCardPreview();
-                
-                document.getElementById('download-share-card-btn').style.display = 'flex';
-            } else {
-                alert('生成失败：' + (result.message || '未知错误'));
-            }
+            this.shareCardDataUrl = await this.createShareCardWithCanvas();
+            this.renderShareCardPreview();
+            document.getElementById('download-share-card-btn').style.display = 'flex';
         } catch (error) {
             console.error('Generate share card failed:', error);
-            alert('网络错误，请重试');
+            alert('生成失败：' + error.message);
         } finally {
             generateBtn.innerHTML = originalText;
             generateBtn.disabled = false;
         }
+    }
+
+    createShareCardWithCanvas() {
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 800;
+            canvas.height = 1200;
+
+            const themes = {
+                default: {
+                    bgGradient: ['#fdfbfb', '#f5f0e8'],
+                    primaryColor: '#e8a87c',
+                    secondaryColor: '#c38d9e',
+                    textColor: '#333333',
+                    accentText: '#e8a87c'
+                },
+                spring: {
+                    bgGradient: ['#f1f8e9', '#e8f5e9'],
+                    primaryColor: '#81c784',
+                    secondaryColor: '#a5d6a7',
+                    textColor: '#1b5e20',
+                    accentText: '#4caf50'
+                },
+                summer: {
+                    bgGradient: ['#fff3e0', '#ffecb3'],
+                    primaryColor: '#ffb74d',
+                    secondaryColor: '#ffcc80',
+                    textColor: '#e65100',
+                    accentText: '#ff9800'
+                },
+                autumn: {
+                    bgGradient: ['#fff3e0', '#fbe9e7'],
+                    primaryColor: '#ffab91',
+                    secondaryColor: '#ffccbc',
+                    textColor: '#bf360c',
+                    accentText: '#ff5722'
+                },
+                winter: {
+                    bgGradient: ['#e3f2fd', '#e1f5fe'],
+                    primaryColor: '#64b5f6',
+                    secondaryColor: '#90caf9',
+                    textColor: '#0d47a1',
+                    accentText: '#2196f3'
+                }
+            };
+
+            const theme = themes[this.selectedShareTheme] || themes.default;
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, theme.bgGradient[0]);
+            gradient.addColorStop(1, theme.bgGradient[1]);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = theme.primaryColor;
+            ctx.globalAlpha = 0.1;
+            this.drawDecorativeCircles(ctx, canvas.width, canvas.height);
+            ctx.globalAlpha = 1;
+
+            ctx.fillStyle = theme.primaryColor;
+            ctx.fillRect(0, 0, canvas.width, 150);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 48px "Noto Serif SC", serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('时节食匣', canvas.width / 2, 95);
+
+            ctx.font = '28px "Noto Serif SC", serif';
+            ctx.globalAlpha = 0.9;
+            ctx.fillText('发现时令美食的美好', canvas.width / 2, 135);
+            ctx.globalAlpha = 1;
+
+            const pkg = this.currentPackage;
+            let yOffset = 180;
+
+            ctx.fillStyle = '#ffffff';
+            this.drawRoundedRect(ctx, 40, yOffset, canvas.width - 80, 100, 20, true, false);
+            yOffset += 25;
+
+            const seasonIcons = { spring: '🌸', summer: '☀️', autumn: '🍂', winter: '❄️' };
+            const seasonNames = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
+            
+            ctx.font = '32px sans-serif';
+            ctx.fillStyle = theme.accentText;
+            ctx.textAlign = 'center';
+            ctx.fillText(seasonIcons[pkg.season] || '🍽️', canvas.width / 2, yOffset + 35);
+
+            ctx.font = 'bold 26px "Noto Serif SC", serif';
+            ctx.fillStyle = theme.textColor;
+            ctx.fillText(`${seasonNames[pkg.season] || pkg.season}限定`, canvas.width / 2, yOffset + 70);
+
+            yOffset += 130;
+
+            ctx.fillStyle = '#ffffff';
+            this.drawRoundedRect(ctx, 40, yOffset, canvas.width - 80, 700, 20, true, false);
+
+            yOffset += 40;
+
+            ctx.font = 'bold 32px "Noto Serif SC", serif';
+            ctx.fillStyle = theme.accentText;
+            ctx.textAlign = 'center';
+            ctx.fillText(`「${pkg.dish_name}」`, canvas.width / 2, yOffset);
+
+            yOffset += 50;
+
+            ctx.font = '24px sans-serif';
+            ctx.fillStyle = theme.textColor;
+            ctx.textAlign = 'left';
+            this.wrapText(ctx, pkg.description || '时令美味', 60, yOffset, canvas.width - 120, 35);
+
+            yOffset += 100;
+
+            ctx.font = 'bold 22px "Noto Serif SC", serif';
+            ctx.fillStyle = theme.accentText;
+            ctx.fillText('🥬 主要食材', 60, yOffset);
+
+            yOffset += 40;
+            if (pkg.ingredients && pkg.ingredients.length > 0) {
+                ctx.font = '20px sans-serif';
+                ctx.fillStyle = '#555555';
+                this.wrapText(ctx, pkg.ingredients.join('、'), 60, yOffset, canvas.width - 120, 30);
+            }
+
+            yOffset += 80;
+
+            ctx.font = 'bold 22px "Noto Serif SC", serif';
+            ctx.fillStyle = theme.accentText;
+            ctx.fillText('📖 烹饪步骤', 60, yOffset);
+
+            yOffset += 40;
+            if (pkg.steps && pkg.steps.length > 0) {
+                ctx.font = '18px sans-serif';
+                ctx.fillStyle = '#555555';
+                pkg.steps.slice(0, 3).forEach((step, index) => {
+                    const stepText = `${index + 1}. ${step}`;
+                    this.wrapText(ctx, stepText, 60, yOffset, canvas.width - 120, 28);
+                    yOffset += 60;
+                });
+                if (pkg.steps.length > 3) {
+                    ctx.fillStyle = '#999999';
+                    ctx.fillText(`... 还有 ${pkg.steps.length - 3} 步`, 60, yOffset);
+                }
+            }
+
+            yOffset = canvas.height - 120;
+
+            ctx.fillStyle = theme.primaryColor;
+            ctx.fillRect(0, yOffset, canvas.width, 120);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '24px "Noto Serif SC", serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('扫码开启舌尖上的时令之旅', canvas.width / 2, yOffset + 50);
+
+            ctx.font = '18px sans-serif';
+            ctx.globalAlpha = 0.8;
+            ctx.fillText('SeasonsBite · 发现四季美食', canvas.width / 2, yOffset + 85);
+            ctx.globalAlpha = 1;
+
+            this.drawQRCodePlaceholder(ctx, canvas.width - 150, yOffset + 15, 90);
+
+            const dataUrl = canvas.toDataURL('image/png');
+            resolve(dataUrl);
+        });
+    }
+
+    drawDecorativeCircles(ctx, width, height) {
+        const circles = [
+            { x: width - 100, y: 200, r: 80 },
+            { x: 100, y: height - 200, r: 120 },
+            { x: width - 150, y: height / 2, r: 60 },
+            { x: 50, y: 400, r: 40 }
+        ];
+
+        circles.forEach(circle => {
+            ctx.beginPath();
+            ctx.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
+    drawRoundedRect(ctx, x, y, width, height, radius, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        if (fill) ctx.fill();
+        if (stroke) ctx.stroke();
+    }
+
+    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        const words = text.split('');
+        let line = '';
+        let currentY = y;
+
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n];
+            const metrics = ctx.measureText(testLine);
+            const testWidth = metrics.width;
+
+            if (testWidth > maxWidth && n > 0) {
+                ctx.fillText(line, x, currentY);
+                line = words[n];
+                currentY += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, x, currentY);
+    }
+
+    drawQRCodePlaceholder(ctx, x, y, size) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        this.drawRoundedRect(ctx, x, y, size, size, 8, false, true);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 0.6;
+        
+        const patterns = [
+            [0, 0], [0, 1], [1, 0], [1, 1],
+            [size - 20, 0], [size - 10, 0], [size - 20, 10], [size - 10, 10],
+            [0, size - 20], [0, size - 10], [10, size - 20], [10, size - 10]
+        ];
+
+        patterns.forEach(p => {
+            ctx.fillRect(x + p[0], y + p[1], 10, 10);
+        });
+
+        ctx.globalAlpha = 1;
     }
 
     renderShareCardPreview() {
