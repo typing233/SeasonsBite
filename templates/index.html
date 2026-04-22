@@ -20,97 +20,648 @@
             </div>
         </header>
 
-        <main class="main-content">
-            <section id="season-info" class="season-section">
-                <div class="season-card">
-                    <div class="season-icon" id="season-icon">🌱</div>
-                    <div class="season-text">
-                        <h2 id="season-name">春季</h2>
-                        <p id="season-desc">春回大地，万物复苏，宜清淡温补</p>
-                    </div>
-                </div>
-            </section>
-
-            <section id="draw-section" class="draw-section">
-                <div class="package-selector">
-                    <h3>选择套餐规格</h3>
-                    <div class="package-options">
-                        <label class="package-option active" data-package="basic">
-                            <input type="radio" name="package" value="basic" checked>
-                            <div class="package-card">
-                                <div class="package-label">基础隐藏款</div>
-                                <div class="package-detail">1荤 + 1素 + 1汤 + 1主食</div>
-                            </div>
-                        </label>
-                        <label class="package-option" data-package="luxury">
-                            <input type="radio" name="package" value="luxury">
-                            <div class="package-card">
-                                <div class="package-label">豪华双荤款</div>
-                                <div class="package-detail">2荤 + 1素 + 1汤</div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <button id="draw-btn" class="draw-btn">
-                    <span class="btn-text">抽取今日食匣</span>
-                    <span class="btn-decoration">✨</span>
+        <nav class="main-nav">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="draw">
+                    <span>🎲</span> 抽取食匣
                 </button>
+                <button class="nav-tab" data-tab="location">
+                    <span>📍</span> 位置感知
+                </button>
+                <button class="nav-tab" data-tab="records">
+                    <span>📝</span> 饮食记录
+                </button>
+                <button class="nav-tab" data-tab="health">
+                    <span>💪</span> 健康评分
+                </button>
+                <button class="nav-tab" data-tab="culture">
+                    <span>📚</span> 节气科普
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <section id="location-section" class="tab-content" style="display: none;">
+                <div class="location-header">
+                    <h2 class="section-title">
+                        <span>📍</span> 地理位置感知
+                    </h2>
+                    <p class="section-subtitle">根据您的位置，智能匹配当地节气与时令饮食</p>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-status" id="location-status">
+                        <div class="status-icon">📍</div>
+                        <div class="status-text">
+                            <h3>获取位置信息</h3>
+                            <p>点击下方按钮，获取您的位置信息</p>
+                        </div>
+                    </div>
+
+                    <div class="location-actions">
+                        <button id="get-location-btn" class="action-btn primary">
+                            <span>📍</span> 获取当前位置
+                        </button>
+                        <button id="manual-location-btn" class="action-btn secondary">
+                            <span>🗺️</span> 手动选择地区
+                        </button>
+                    </div>
+
+                    <div id="location-result" class="location-result" style="display: none;">
+                        <div class="result-row">
+                            <span class="result-label">当前位置：</span>
+                            <span class="result-value" id="location-region">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">当前节气：</span>
+                            <span class="result-value highlight" id="location-term">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">当前季节：</span>
+                            <span class="result-value" id="location-season">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">经纬度：</span>
+                            <span class="result-value" id="location-coords">-</span>
+                        </div>
+                    </div>
+
+                    <div id="term-detail" class="term-detail" style="display: none;">
+                        <h3 class="detail-title">
+                            <span id="term-icon">🌱</span>
+                            <span id="term-name">节气详情</span>
+                        </h3>
+                        <p class="detail-description" id="term-description"></p>
+                        
+                        <div class="detail-section">
+                            <h4>📅 节气习俗</h4>
+                            <ul id="term-customs" class="detail-list"></ul>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>🍽️ 饮食建议</h4>
+                            <div class="dietary-advice">
+                                <div class="advice-column">
+                                    <h5>✅ 推荐食物</h5>
+                                    <ul id="term-recommended" class="detail-list recommended"></ul>
+                                </div>
+                                <div class="advice-column">
+                                    <h5>⚠️ 避免食物</h5>
+                                    <ul id="term-avoid" class="detail-list avoid"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>💡 养生贴士</h4>
+                            <ul id="term-health-tips" class="detail-list"></ul>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4>📖 文化故事</h4>
+                            <p class="cultural-story" id="term-cultural-story"></p>
+                        </div>
+                    </div>
+
+                    <div id="manual-location-modal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>选择地区</h3>
+                                <button class="modal-close" id="close-manual-modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="region-selector">
+                                    <button class="region-btn" data-region="north">
+                                        <span>🏔️</span>
+                                        <span>北方地区</span>
+                                    </button>
+                                    <button class="region-btn" data-region="south">
+                                        <span>🌴</span>
+                                        <span>南方地区</span>
+                                    </button>
+                                    <button class="region-btn" data-region="east">
+                                        <span>🌊</span>
+                                        <span>华东地区</span>
+                                    </button>
+                                    <button class="region-btn" data-region="west">
+                                        <span>⛰️</span>
+                                        <span>西南地区</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <section id="result-section" class="result-section" style="display: none;">
-                <div class="result-header">
-                    <h2 class="result-title">今日食匣</h2>
-                    <p class="result-subtitle" id="result-season"></p>
+            <section id="draw-section-tab" class="tab-content">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>🎲</span> 抽取今日食匣
+                    </h2>
                 </div>
 
-                <div class="cards-container" id="cards-container">
+                <section id="season-info" class="season-section">
+                    <div class="season-card">
+                        <div class="season-icon" id="season-icon">🌱</div>
+                        <div class="season-text">
+                            <h2 id="season-name">春季</h2>
+                            <p id="season-desc">春回大地，万物复苏，宜清淡温补</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="draw-section" class="draw-section">
+                    <div class="package-selector">
+                        <h3>选择套餐规格</h3>
+                        <div class="package-options">
+                            <label class="package-option active" data-package="basic">
+                                <input type="radio" name="package" value="basic" checked>
+                                <div class="package-card">
+                                    <div class="package-label">基础隐藏款</div>
+                                    <div class="package-detail">1荤 + 1素 + 1汤 + 1主食</div>
+                                </div>
+                            </label>
+                            <label class="package-option" data-package="luxury">
+                                <input type="radio" name="package" value="luxury">
+                                <div class="package-card">
+                                    <div class="package-label">豪华双荤款</div>
+                                    <div class="package-detail">2荤 + 1素 + 1汤</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button id="draw-btn" class="draw-btn">
+                        <span class="btn-text">抽取今日食匣</span>
+                        <span class="btn-decoration">✨</span>
+                    </button>
+                </section>
+
+                <section id="result-section" class="result-section" style="display: none;">
+                    <div class="result-header">
+                        <h2 class="result-title">今日食匣</h2>
+                        <p class="result-subtitle" id="result-season"></p>
+                    </div>
+
+                    <div class="cards-container" id="cards-container">
+                    </div>
+
+                    <div class="action-bar">
+                        <button id="redraw-all-btn" class="action-btn secondary">
+                            <span>🎲</span> 重新抽取
+                        </button>
+                        <button id="generate-text-btn" class="action-btn primary">
+                            <span>📝</span> 生成文本
+                        </button>
+                        <button id="generate-screenshot-btn" class="action-btn primary">
+                            <span>📸</span> 生成截图
+                        </button>
+                        <button id="generate-share-card-btn" class="action-btn primary">
+                            <span>🎨</span> 生成分享卡
+                        </button>
+                    </div>
+
+                    <div id="text-modal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>菜单文本</h3>
+                                <button class="modal-close" id="close-text-modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <pre id="menu-text"></pre>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="copy-text-btn" class="action-btn primary">
+                                    <span>📋</span> 复制到剪贴板
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="screenshot-modal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>菜单截图</h3>
+                                <button class="modal-close" id="close-screenshot-modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="screenshot-preview" class="screenshot-preview">
+                                    <p>正在生成截图...</p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="download-screenshot-btn" class="action-btn primary" style="display: none;">
+                                    <span>💾</span> 下载截图
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="share-card-modal" class="modal" style="display: none;">
+                        <div class="modal-content large-modal">
+                            <div class="modal-header">
+                                <h3>分享卡片</h3>
+                                <button class="modal-close" id="close-share-card-modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="share-card-preview">
+                                    <div id="share-card-preview" class="card-preview-container">
+                                    </div>
+                                </div>
+                                <div class="share-card-themes">
+                                    <h4>选择主题</h4>
+                                    <div class="theme-selector">
+                                        <button class="theme-btn active" data-theme="default">
+                                            <span class="theme-color" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);"></span>
+                                            <span>经典</span>
+                                        </button>
+                                        <button class="theme-btn" data-theme="spring">
+                                            <span class="theme-color" style="background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);"></span>
+                                            <span>春意</span>
+                                        </button>
+                                        <button class="theme-btn" data-theme="summer">
+                                            <span class="theme-color" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></span>
+                                            <span>清凉</span>
+                                        </button>
+                                        <button class="theme-btn" data-theme="autumn">
+                                            <span class="theme-color" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></span>
+                                            <span>秋意</span>
+                                        </button>
+                                        <button class="theme-btn" data-theme="winter">
+                                            <span class="theme-color" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></span>
+                                            <span>冬日</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="generate-share-card-final-btn" class="action-btn primary">
+                                    <span>🎨</span> 生成卡片
+                                </button>
+                                <button id="download-share-card-btn" class="action-btn primary" style="display: none;">
+                                    <span>💾</span> 下载卡片
+                                </button>
+                                <button id="share-to-social-btn" class="action-btn secondary" style="display: none;">
+                                    <span>📱</span> 分享
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <section id="records-section" class="tab-content" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>📝</span> 饮食记录
+                    </h2>
+                    <p class="section-subtitle">记录您的每日饮食，追踪营养摄入</p>
                 </div>
 
-                <div class="action-bar">
-                    <button id="redraw-all-btn" class="action-btn secondary">
-                        <span>🎲</span> 重新抽取
-                    </button>
-                    <button id="generate-text-btn" class="action-btn primary">
-                        <span>📝</span> 生成文本
-                    </button>
-                    <button id="generate-screenshot-btn" class="action-btn primary">
-                        <span>📸</span> 生成截图
-                    </button>
+                <div class="record-form-card">
+                    <h3 class="form-title">
+                        <span>✏️</span> 添加今日记录
+                    </h3>
+                    
+                    <form id="dietary-record-form" class="dietary-form">
+                        <div class="form-row">
+                            <label class="form-label">日期</label>
+                            <input type="date" id="record-date" class="form-input" required>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">餐次</label>
+                            <select id="record-meal-type" class="form-select">
+                                <option value="breakfast">早餐</option>
+                                <option value="lunch">午餐</option>
+                                <option value="dinner">晚餐</option>
+                                <option value="snack">加餐</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">食物名称</label>
+                            <input type="text" id="record-food-name" class="form-input" placeholder="例如：韭菜炒鸡蛋" required>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">食物类别</label>
+                            <select id="record-food-category" class="form-select">
+                                <option value="meat">荤菜</option>
+                                <option value="vegetable">素菜</option>
+                                <option value="soup">汤品</option>
+                                <option value="staple">主食</option>
+                                <option value="fruit">水果</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">数量</label>
+                            <div class="quantity-input">
+                                <input type="number" id="record-quantity" class="form-input" placeholder="1" min="0.1" step="0.1" required>
+                                <select id="record-unit" class="form-select small">
+                                    <option value="portion">份</option>
+                                    <option value="bowl">碗</option>
+                                    <option value="plate">盘</option>
+                                    <option value="g">克</option>
+                                    <option value="kg">千克</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">备注</label>
+                            <textarea id="record-notes" class="form-textarea" placeholder="可选：添加备注信息"></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" id="add-food-btn" class="action-btn primary">
+                                <span>➕</span> 添加食物
+                            </button>
+                            <button type="submit" id="save-record-btn" class="action-btn secondary">
+                                <span>💾</span> 保存记录
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="current-items" id="current-items-section" style="display: none;">
+                        <h4 class="items-title">当前已添加的食物</h4>
+                        <div id="current-items-list" class="items-list">
+                        </div>
+                    </div>
                 </div>
 
-                <div id="text-modal" class="modal" style="display: none;">
-                    <div class="modal-content">
+                <div class="records-history">
+                    <h3 class="history-title">
+                        <span>📋</span> 历史记录
+                    </h3>
+                    
+                    <div class="history-filters">
+                        <div class="filter-row">
+                            <label class="filter-label">日期范围</label>
+                            <input type="date" id="filter-start-date" class="form-input small">
+                            <span class="filter-separator">至</span>
+                            <input type="date" id="filter-end-date" class="form-input small">
+                            <button id="apply-filter-btn" class="action-btn secondary small">
+                                <span>🔍</span> 筛选
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="records-list" class="records-list">
+                        <div class="empty-state">
+                            <div class="empty-icon">📝</div>
+                            <p>还没有饮食记录</p>
+                            <p class="empty-hint">添加您的第一条饮食记录吧！</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="health-section" class="tab-content" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>💪</span> 健康评分
+                    </h2>
+                    <p class="section-subtitle">根据您的饮食记录，生成季节性健康评分</p>
+                </div>
+
+                <div class="health-score-card">
+                    <div class="score-overview">
+                        <div class="score-circle" id="score-circle">
+                            <div class="score-value" id="score-value">--</div>
+                            <div class="score-level" id="score-level">加载中</div>
+                        </div>
+                        <div class="score-info">
+                            <h3 id="score-title">季节性健康评分</h3>
+                            <p id="score-description">根据您最近7天的饮食记录计算</p>
+                            <div class="score-details">
+                                <div class="score-detail-item">
+                                    <span class="detail-label">当前季节：</span>
+                                    <span class="detail-value" id="score-season">-</span>
+                                </div>
+                                <div class="score-detail-item">
+                                    <span class="detail-label">评分等级：</span>
+                                    <span class="detail-value" id="score-grade">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="score-dimensions">
+                        <h4 class="dimensions-title">评分维度</h4>
+                        <div class="dimensions-list" id="score-dimensions-list">
+                        </div>
+                    </div>
+
+                    <div class="score-advice">
+                        <div class="advice-column">
+                            <h4>✅ 做得好的方面</h4>
+                            <ul id="score-strengths" class="advice-list">
+                                <li class="advice-item">暂无数据</li>
+                            </ul>
+                        </div>
+                        <div class="advice-column">
+                            <h4>⚠️ 需要改进的方面</h4>
+                            <ul id="score-improvements" class="advice-list">
+                                <li class="advice-item">暂无数据</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="score-recommendations">
+                        <h4>💡 个性化建议</h4>
+                        <ul id="score-advice" class="recommendations-list">
+                            <li class="recommendation-item">添加更多饮食记录以获取个性化建议</li>
+                        </ul>
+                    </div>
+
+                    <div class="score-actions">
+                        <button id="refresh-score-btn" class="action-btn primary">
+                            <span>🔄</span> 刷新评分
+                        </button>
+                        <button id="generate-score-card-btn" class="action-btn secondary">
+                            <span>🎨</span> 生成评分卡片
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="culture-section" class="tab-content" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>📚</span> 节气科普
+                    </h2>
+                    <p class="section-subtitle">探索二十四节气背后的文化习俗与养生智慧</p>
+                </div>
+
+                <div class="current-term-card">
+                    <h3 class="current-term-title">
+                        <span id="current-term-icon">🌱</span>
+                        当前节气：<span id="current-term-name">-</span>
+                    </h3>
+                    <p class="current-term-date" id="current-term-date">-</p>
+                    <p class="current-term-desc" id="current-term-desc">-</p>
+                </div>
+
+                <div class="solar-terms-timeline">
+                    <h3 class="timeline-title">
+                        <span>📅</span> 二十四节气时间线
+                    </h3>
+                    
+                    <div class="timeline-nav">
+                        <div class="season-filter">
+                            <button class="season-btn active" data-season="all">全部</button>
+                            <button class="season-btn" data-season="spring">春季</button>
+                            <button class="season-btn" data-season="summer">夏季</button>
+                            <button class="season-btn" data-season="autumn">秋季</button>
+                            <button class="season-btn" data-season="winter">冬季</button>
+                        </div>
+                    </div>
+
+                    <div id="terms-timeline" class="terms-timeline">
+                    </div>
+                </div>
+
+                <div id="term-detail-modal" class="modal" style="display: none;">
+                    <div class="modal-content large-modal">
                         <div class="modal-header">
-                            <h3>菜单文本</h3>
-                            <button class="modal-close" id="close-text-modal">&times;</button>
+                            <h3 id="modal-term-name">节气详情</h3>
+                            <button class="modal-close" id="close-term-modal">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <pre id="menu-text"></pre>
+                            <div class="modal-term-header">
+                                <div class="modal-term-icon" id="modal-term-icon">🌱</div>
+                                <div class="modal-term-info">
+                                    <h4 id="modal-term-english">-</h4>
+                                    <p id="modal-term-season">-</p>
+                                    <p id="modal-term-date-range">-</p>
+                                </div>
+                            </div>
+                            
+                            <div class="modal-term-description">
+                                <h5>📖 节气简介</h5>
+                                <p id="modal-term-description">-</p>
+                            </div>
+
+                            <div class="modal-term-customs">
+                                <h5>🎊 传统习俗</h5>
+                                <ul id="modal-term-customs" class="customs-list">
+                                </ul>
+                            </div>
+
+                            <div class="modal-term-dietary">
+                                <h5>🍽️ 饮食养生</h5>
+                                <div class="dietary-columns">
+                                    <div class="dietary-column">
+                                        <h6>✅ 推荐食物</h6>
+                                        <ul id="modal-term-recommended" class="food-list">
+                                        </ul>
+                                    </div>
+                                    <div class="dietary-column">
+                                        <h6>⚠️ 避免食物</h6>
+                                        <ul id="modal-term-avoid" class="food-list">
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-term-health">
+                                <h5>💡 养生贴士</h5>
+                                <ul id="modal-term-health-tips" class="tips-list">
+                                </ul>
+                            </div>
+
+                            <div class="modal-term-cultural">
+                                <h5>📜 文化故事</h5>
+                                <p id="modal-term-cultural-story">-</p>
+                            </div>
                         </div>
                         <div class="modal-footer">
-                            <button id="copy-text-btn" class="action-btn primary">
-                                <span>📋</span> 复制到剪贴板
+                            <button id="generate-term-card-btn" class="action-btn primary">
+                                <span>🎨</span> 生成节气卡片
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div id="screenshot-modal" class="modal" style="display: none;">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3>菜单截图</h3>
-                            <button class="modal-close" id="close-screenshot-modal">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="screenshot-preview" class="screenshot-preview">
-                                <p>正在生成截图...</p>
+                <div class="seasonal-guidelines">
+                    <h3 class="guidelines-title">
+                        <span>📋</span> 四季养生指南
+                    </h3>
+                    
+                    <div class="guidelines-tabs">
+                        <button class="guideline-tab active" data-season="spring">
+                            <span>🌱</span> 春季
+                        </button>
+                        <button class="guideline-tab" data-season="summer">
+                            <span>☀️</span> 夏季
+                        </button>
+                        <button class="guideline-tab" data-season="autumn">
+                            <span>🍂</span> 秋季
+                        </button>
+                        <button class="guideline-tab" data-season="winter">
+                            <span>❄️</span> 冬季
+                        </button>
+                    </div>
+
+                    <div id="guidelines-content" class="guidelines-content">
+                        <div class="guideline-panel active" data-season="spring">
+                            <h4>春季养生</h4>
+                            <p class="guideline-desc">春季养生宜顺应阳气生发，万物始生的特点，注意保护阳气，着眼于一个"生"字。</p>
+                            <div class="guideline-details">
+                                <div class="guideline-item">
+                                    <h5>饮食原则</h5>
+                                    <p>宜省酸增甘，以养脾气</p>
+                                </div>
+                                <div class="guideline-item">
+                                    <h5>推荐食物</h5>
+                                    <p>韭菜、春笋、香椿、菠菜、荠菜等时令蔬菜，红枣、蜂蜜等温补食品</p>
+                                </div>
+                                <div class="guideline-item">
+                                    <h5>避免食物</h5>
+                                    <p>生冷食物、辛辣刺激食物、油腻厚味食物</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button id="download-screenshot-btn" class="action-btn primary" style="display: none;">
-                                <span>💾</span> 下载截图
-                            </button>
+                    </div>
+                </div>
+
+                <div class="regional-adjustment">
+                    <h3 class="regional-title">
+                        <span>🗺️</span> 地区饮食调整
+                    </h3>
+                    
+                    <div class="regional-tabs">
+                        <button class="regional-tab active" data-region="north">
+                            <span>🏔️</span> 北方地区
+                        </button>
+                        <button class="regional-tab" data-region="south">
+                            <span>🌴</span> 南方地区
+                        </button>
+                        <button class="regional-tab" data-region="east">
+                            <span>🌊</span> 华东地区
+                        </button>
+                        <button class="regional-tab" data-region="west">
+                            <span>⛰️</span> 西南地区
+                        </button>
+                    </div>
+
+                    <div id="regional-content" class="regional-content">
+                        <div class="regional-panel active" data-region="north">
+                            <p class="regional-desc">北方地区冬季寒冷干燥，夏季炎热多雨，春秋季节短暂。</p>
+                            <div class="regional-adjustments">
+                                <div class="adjustment-item">
+                                    <h5>冬季</h5>
+                                    <p>北方冬季寒冷，宜多食温补食物，如羊肉、牛肉、栗子等，以抵御寒冷。</p>
+                                </div>
+                                <div class="adjustment-item">
+                                    <h5>夏季</h5>
+                                    <p>北方夏季炎热，宜多食清热解暑食物，如西瓜、绿豆、苦瓜等。</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

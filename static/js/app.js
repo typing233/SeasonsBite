@@ -3,12 +3,89 @@ class SeasonsBite {
         this.currentSeason = null;
         this.currentPackage = null;
         this.selectedPackageType = 'basic';
+        this.currentTab = 'draw';
+        this.currentLocation = null;
+        this.currentSolarTerm = null;
+        this.dietaryRecords = [];
+        this.currentRecordItems = [];
+        this.healthScore = null;
+        this.solarTermsData = null;
+        this.selectedShareTheme = 'default';
+        this.shareCardDataUrl = null;
         this.init();
     }
 
     async init() {
         await this.loadSeasonInfo();
+        await this.loadSolarTermsData();
+        this.setDefaultDate();
         this.bindEvents();
+        this.initCurrentTermDisplay();
+    }
+
+    async loadSolarTermsData() {
+        try {
+            const response = await fetch('/api/solar-terms');
+            const result = await response.json();
+            if (result.success && result.data) {
+                const data = result.data;
+                this.solarTermsData = {
+                    solar_terms: {},
+                    seasonal_guidelines: data.seasonal_guidelines || {},
+                    regional_adjustment: data.location_adjustment || {}
+                };
+                if (data.all_terms) {
+                    data.all_terms.forEach(term => {
+                        this.solarTermsData.solar_terms[term.key] = term;
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load solar terms data:', error);
+        }
+    }
+
+    setDefaultDate() {
+        const today = new Date().toISOString().split('T')[0];
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            if (!input.value) {
+                input.value = today;
+            }
+        });
+    }
+
+    initCurrentTermDisplay() {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        
+        let termKey = null;
+        if (this.solarTermsData && this.solarTermsData.solar_terms) {
+            for (const [key, term] of Object.entries(this.solarTermsData.solar_terms)) {
+                const [startMonth, startDay] = term.date_range.start.split('-').map(Number);
+                const [endMonth, endDay] = term.date_range.end.split('-').map(Number);
+                
+                if ((month > startMonth || (month === startMonth && day >= startDay)) &&
+                    (month < endMonth || (month === endMonth && day <= endDay))) {
+                    termKey = key;
+                    break;
+                }
+            }
+        }
+
+        if (termKey && this.solarTermsData && this.solarTermsData.solar_terms[termKey]) {
+            const term = this.solarTermsData.solar_terms[termKey];
+            const currentTermName = document.getElementById('current-term-name');
+            const currentTermIcon = document.getElementById('current-term-icon');
+            const currentTermDate = document.getElementById('current-term-date');
+            const currentTermDesc = document.getElementById('current-term-desc');
+
+            if (currentTermName) currentTermName.textContent = term.name;
+            if (currentTermIcon) currentTermIcon.textContent = term.icon;
+            if (currentTermDate) currentTermDate.textContent = `${term.date_range.start} ~ ${term.date_range.end}`;
+            if (currentTermDesc) currentTermDesc.textContent = term.description;
+        }
     }
 
     async loadSeasonInfo() {
@@ -82,6 +159,13 @@ class SeasonsBite {
             this.downloadScreenshot();
         });
 
+        this.bindNavigationEvents();
+        this.bindLocationEvents();
+        this.bindRecordsEvents();
+        this.bindHealthEvents();
+        this.bindCultureEvents();
+        this.bindShareCardEvents();
+
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
@@ -89,6 +173,1011 @@ class SeasonsBite {
                 }
             });
         });
+    }
+
+    bindNavigationEvents() {
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                this.switchTab(tab.dataset.tab);
+            });
+        });
+    }
+
+    switchTab(tabName) {
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.tab === tabName);
+        });
+
+        const tabContents = {
+            'draw': 'draw-section-tab',
+            'location': 'location-section',
+            'records': 'records-section',
+            'health': 'health-section',
+            'culture': 'culture-section'
+        };
+
+        Object.entries(tabContents).forEach(([tab, sectionId]) => {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.style.display = tab === tabName ? 'block' : 'none';
+            }
+        });
+
+        this.currentTab = tabName;
+
+        if (tabName === 'health') {
+            this.loadHealthScore();
+        } else if (tabName === 'culture') {
+            this.renderSolarTermsTimeline();
+        } else if (tabName === 'records') {
+            this.loadRecords();
+        }
+    }
+
+    bindLocationEvents() {
+        const getLocationBtn = document.getElementById('get-location-btn');
+        if (getLocationBtn) {
+            getLocationBtn.addEventListener('click', () => this.getCurrentLocation());
+        }
+
+        const manualLocationBtn = document.getElementById('manual-location-btn');
+        if (manualLocationBtn) {
+            manualLocationBtn.addEventListener('click', () => {
+                document.getElementById('manual-location-modal').style.display = 'flex';
+            });
+        }
+
+        const closeManualModal = document.getElementById('close-manual-modal');
+        if (closeManualModal) {
+            closeManualModal.addEventListener('click', () => {
+                document.getElementById('manual-location-modal').style.display = 'none';
+            });
+        }
+
+        document.querySelectorAll('.region-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.selectRegion(btn.dataset.region);
+                document.getElementById('manual-location-modal').style.display = 'none';
+            });
+        });
+    }
+
+    async getCurrentLocation() {
+        const statusIcon = document.querySelector('#location-status .status-icon');
+        const statusText = document.querySelector('#location-status .status-text h3');
+        const statusDesc = document.querySelector('#location-status .status-text p');
+
+        statusIcon.textContent = '⏳';
+        statusText.textContent = '正在获取位置...';
+        statusDesc.textContent = '请等待浏览器获取您的位置信息';
+
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    await this.submitLocation(latitude, longitude);
+                },
+                (error) => {
+                    statusIcon.textContent = '❌';
+                    statusText.textContent = '获取位置失败';
+                    statusDesc.textContent = error.message || '无法获取位置信息，请尝试手动选择地区';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        } else {
+            statusIcon.textContent = '❌';
+            statusText.textContent = '浏览器不支持定位';
+            statusDesc.textContent = '请使用手动选择地区功能';
+        }
+    }
+
+    async submitLocation(latitude, longitude) {
+        try {
+            const response = await fetch('/api/location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.currentLocation = result.data;
+                this.displayLocationResult(result.data);
+            } else {
+                this.showLocationError(result.message || '位置处理失败');
+            }
+        } catch (error) {
+            console.error('Location submission failed:', error);
+            this.showLocationError('网络错误，请重试');
+        }
+    }
+
+    async selectRegion(region) {
+        const regionCoords = {
+            north: { lat: 39.9042, lng: 116.4074 },
+            south: { lat: 23.1291, lng: 113.2644 },
+            east: { lat: 31.2304, lng: 121.4737 },
+            west: { lat: 30.5728, lng: 104.0668 }
+        };
+
+        const coords = regionCoords[region];
+        if (coords) {
+            await this.submitLocation(coords.lat, coords.lng);
+        }
+    }
+
+    displayLocationResult(data) {
+        const statusIcon = document.querySelector('#location-status .status-icon');
+        const statusText = document.querySelector('#location-status .status-text h3');
+        const statusDesc = document.querySelector('#location-status .status-text p');
+
+        statusIcon.textContent = '✅';
+        statusText.textContent = '位置获取成功';
+        statusDesc.textContent = '已根据您的位置匹配当地节气';
+
+        document.getElementById('location-result').style.display = 'block';
+        document.getElementById('location-region').textContent = data.region_name || '未知地区';
+        document.getElementById('location-term').textContent = data.solar_term || '未知节气';
+        document.getElementById('location-season').textContent = data.season_name || '未知季节';
+        document.getElementById('location-coords').textContent = `${data.latitude?.toFixed(4) || '-'}, ${data.longitude?.toFixed(4) || '-'}`;
+
+        if (data.solar_term_key) {
+            this.loadSolarTermDetail(data.solar_term_key);
+        }
+    }
+
+    showLocationError(message) {
+        const statusIcon = document.querySelector('#location-status .status-icon');
+        const statusText = document.querySelector('#location-status .status-text h3');
+        const statusDesc = document.querySelector('#location-status .status-text p');
+
+        statusIcon.textContent = '❌';
+        statusText.textContent = '处理失败';
+        statusDesc.textContent = message;
+    }
+
+    async loadSolarTermDetail(termKey) {
+        try {
+            const response = await fetch(`/api/solar-term/${termKey}`);
+            const result = await response.json();
+
+            if (result.success) {
+                this.displaySolarTermDetail(result.data);
+            }
+        } catch (error) {
+            console.error('Failed to load solar term detail:', error);
+        }
+    }
+
+    displaySolarTermDetail(term) {
+        const termDetail = document.getElementById('term-detail');
+        termDetail.style.display = 'block';
+
+        document.getElementById('term-icon').textContent = term.icon || '🌱';
+        document.getElementById('term-name').textContent = term.name || '节气';
+        document.getElementById('term-description').textContent = term.description || '';
+
+        const customsList = document.getElementById('term-customs');
+        customsList.innerHTML = '';
+        if (term.customs && term.customs.length > 0) {
+            term.customs.forEach(custom => {
+                const li = document.createElement('li');
+                li.textContent = custom;
+                customsList.appendChild(li);
+            });
+        }
+
+        const recommendedList = document.getElementById('term-recommended');
+        recommendedList.innerHTML = '';
+        if (term.dietary_advice && term.dietary_advice.recommended) {
+            term.dietary_advice.recommended.forEach(food => {
+                const li = document.createElement('li');
+                li.textContent = food;
+                recommendedList.appendChild(li);
+            });
+        }
+
+        const avoidList = document.getElementById('term-avoid');
+        avoidList.innerHTML = '';
+        if (term.dietary_advice && term.dietary_advice.avoid) {
+            term.dietary_advice.avoid.forEach(food => {
+                const li = document.createElement('li');
+                li.textContent = food;
+                avoidList.appendChild(li);
+            });
+        }
+
+        const healthTipsList = document.getElementById('term-health-tips');
+        healthTipsList.innerHTML = '';
+        if (term.health_tips && term.health_tips.length > 0) {
+            term.health_tips.forEach(tip => {
+                const li = document.createElement('li');
+                li.textContent = tip;
+                healthTipsList.appendChild(li);
+            });
+        }
+
+        const culturalStory = document.getElementById('term-cultural-story');
+        if (culturalStory) {
+            culturalStory.textContent = term.cultural_story || '';
+        }
+    }
+
+    bindRecordsEvents() {
+        const addFoodBtn = document.getElementById('add-food-btn');
+        if (addFoodBtn) {
+            addFoodBtn.addEventListener('click', () => this.addFoodItem());
+        }
+
+        const recordForm = document.getElementById('dietary-record-form');
+        if (recordForm) {
+            recordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveDietaryRecord();
+            });
+        }
+
+        const applyFilterBtn = document.getElementById('apply-filter-btn');
+        if (applyFilterBtn) {
+            applyFilterBtn.addEventListener('click', () => this.filterRecords());
+        }
+    }
+
+    addFoodItem() {
+        const foodName = document.getElementById('record-food-name').value.trim();
+        const foodCategory = document.getElementById('record-food-category').value;
+        const quantity = parseFloat(document.getElementById('record-quantity').value) || 1;
+        const unit = document.getElementById('record-unit').value;
+        const mealType = document.getElementById('record-meal-type').value;
+        const notes = document.getElementById('record-notes').value.trim();
+
+        if (!foodName) {
+            alert('请输入食物名称');
+            return;
+        }
+
+        const item = {
+            id: Date.now(),
+            food_name: foodName,
+            food_category: foodCategory,
+            quantity: quantity,
+            unit: unit,
+            meal_type: mealType,
+            notes: notes
+        };
+
+        this.currentRecordItems.push(item);
+        this.renderCurrentItems();
+
+        document.getElementById('record-food-name').value = '';
+        document.getElementById('record-quantity').value = '';
+        document.getElementById('record-notes').value = '';
+    }
+
+    renderCurrentItems() {
+        const section = document.getElementById('current-items-section');
+        const list = document.getElementById('current-items-list');
+
+        if (this.currentRecordItems.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        list.innerHTML = '';
+
+        const categoryIcons = {
+            meat: '🥩',
+            vegetable: '🥗',
+            soup: '🍲',
+            staple: '🍚',
+            fruit: '🍎',
+            other: '🍽️'
+        };
+
+        const mealTypeLabels = {
+            breakfast: '早餐',
+            lunch: '午餐',
+            dinner: '晚餐',
+            snack: '加餐'
+        };
+
+        this.currentRecordItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'food-item';
+            div.innerHTML = `
+                <div class="food-item-icon">${categoryIcons[item.food_category] || '🍽️'}</div>
+                <div class="food-item-info">
+                    <div class="food-item-name">${item.food_name}</div>
+                    <div class="food-item-detail">${mealTypeLabels[item.meal_type]} · ${item.quantity}${item.unit}</div>
+                    ${item.notes ? `<div class="food-item-notes">${item.notes}</div>` : ''}
+                </div>
+                <button class="food-item-remove" data-id="${item.id}">✕</button>
+            `;
+
+            const removeBtn = div.querySelector('.food-item-remove');
+            removeBtn.addEventListener('click', () => {
+                this.currentRecordItems = this.currentRecordItems.filter(i => i.id !== item.id);
+                this.renderCurrentItems();
+            });
+
+            list.appendChild(div);
+        });
+    }
+
+    async saveDietaryRecord() {
+        if (this.currentRecordItems.length === 0) {
+            alert('请至少添加一项食物');
+            return;
+        }
+
+        const recordDate = document.getElementById('record-date').value;
+
+        try {
+            const response = await fetch('/api/records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    date: recordDate,
+                    items: this.currentRecordItems
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('记录保存成功！');
+                this.currentRecordItems = [];
+                this.renderCurrentItems();
+                this.loadRecords();
+            } else {
+                alert('保存失败：' + (result.message || '未知错误'));
+            }
+        } catch (error) {
+            console.error('Save record failed:', error);
+            alert('网络错误，请重试');
+        }
+    }
+
+    async loadRecords() {
+        try {
+            const response = await fetch('/api/records');
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                this.dietaryRecords = result.data.records || [];
+                this.renderRecordsList();
+            }
+        } catch (error) {
+            console.error('Load records failed:', error);
+        }
+    }
+
+    renderRecordsList() {
+        const list = document.getElementById('records-list');
+
+        if (this.dietaryRecords.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <p>还没有饮食记录</p>
+                    <p class="empty-hint">添加您的第一条饮食记录吧！</p>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = '';
+
+        const categoryIcons = {
+            meat: '🥩',
+            vegetable: '🥗',
+            soup: '🍲',
+            staple: '🍚',
+            fruit: '🍎',
+            other: '🍽️'
+        };
+
+        const mealTypeLabels = {
+            breakfast: '早餐',
+            lunch: '午餐',
+            dinner: '晚餐',
+            snack: '加餐'
+        };
+
+        this.dietaryRecords.forEach(record => {
+            const recordDiv = document.createElement('div');
+            recordDiv.className = 'record-item';
+
+            const dateObj = new Date(record.date);
+            const dateStr = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}-${dateObj.getDate().toString().padStart(2, '0')}`;
+
+            let itemsHtml = '';
+            record.items.forEach(item => {
+                itemsHtml += `
+                    <div class="record-food-item">
+                        <span class="record-food-icon">${categoryIcons[item.food_category] || '🍽️'}</span>
+                        <span class="record-food-name">${item.food_name}</span>
+                        <span class="record-food-detail">${mealTypeLabels[item.meal_type]} · ${item.quantity}${item.unit}</span>
+                    </div>
+                `;
+            });
+
+            recordDiv.innerHTML = `
+                <div class="record-header">
+                    <span class="record-date">📅 ${dateStr}</span>
+                    <span class="record-count">${record.items.length} 项食物</span>
+                </div>
+                <div class="record-items">
+                    ${itemsHtml}
+                </div>
+            `;
+
+            list.appendChild(recordDiv);
+        });
+    }
+
+    filterRecords() {
+        const startDate = document.getElementById('filter-start-date').value;
+        const endDate = document.getElementById('filter-end-date').value;
+        this.renderRecordsList();
+    }
+
+    bindHealthEvents() {
+        const refreshScoreBtn = document.getElementById('refresh-score-btn');
+        if (refreshScoreBtn) {
+            refreshScoreBtn.addEventListener('click', () => this.loadHealthScore());
+        }
+
+        const generateScoreCardBtn = document.getElementById('generate-score-card-btn');
+        if (generateScoreCardBtn) {
+            generateScoreCardBtn.addEventListener('click', () => this.generateScoreCard());
+        }
+    }
+
+    async loadHealthScore() {
+        try {
+            const response = await fetch('/api/health-score');
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const data = result.data;
+                const seasonNames = {
+                    spring: '春季',
+                    summer: '夏季',
+                    autumn: '秋季',
+                    winter: '冬季'
+                };
+                
+                this.healthScore = {
+                    total_score: data.overall_score || 0,
+                    level: data.score_level_name || '未知',
+                    grade: data.score_level || 'fair',
+                    season_name: seasonNames[data.current_season] || '-',
+                    dimensions: {},
+                    strengths: data.strengths || [],
+                    improvements: data.improvements || [],
+                    advice: data.advice || []
+                };
+
+                if (data.dimensions) {
+                    const dimMap = {
+                        seasonal_health: 'seasonal',
+                        nutritional_balance: 'nutrition',
+                        tcm_harmony: 'tcm',
+                        dietary_diversity: 'diversity'
+                    };
+                    Object.entries(data.dimensions).forEach(([key, dim]) => {
+                        const newKey = dimMap[key] || key;
+                        this.healthScore.dimensions[newKey] = {
+                            score: dim.score || 0
+                        };
+                    });
+                }
+
+                this.displayHealthScore();
+            }
+        } catch (error) {
+            console.error('Load health score failed:', error);
+        }
+    }
+
+    displayHealthScore() {
+        if (!this.healthScore) return;
+
+        const scoreValue = document.getElementById('score-value');
+        const scoreLevel = document.getElementById('score-level');
+        const scoreGrade = document.getElementById('score-grade');
+        const scoreSeason = document.getElementById('score-season');
+
+        scoreValue.textContent = this.healthScore.total_score;
+        scoreLevel.textContent = this.healthScore.level;
+        scoreGrade.textContent = this.healthScore.grade;
+        scoreSeason.textContent = this.healthScore.season_name || '-';
+
+        const scoreCircle = document.getElementById('score-circle');
+        const score = this.healthScore.total_score;
+        let color;
+        if (score >= 80) {
+            color = '#4caf50';
+        } else if (score >= 60) {
+            color = '#ff9800';
+        } else {
+            color = '#f44336';
+        }
+        scoreCircle.style.borderColor = color;
+
+        const dimensionsList = document.getElementById('score-dimensions-list');
+        dimensionsList.innerHTML = '';
+
+        if (this.healthScore.dimensions) {
+            Object.entries(this.healthScore.dimensions).forEach(([key, dim]) => {
+                const item = document.createElement('div');
+                item.className = 'dimension-item';
+                
+                const icons = {
+                    seasonal: '🌱',
+                    nutrition: '🥗',
+                    tcm: '🧘',
+                    diversity: '🌈'
+                };
+
+                const labels = {
+                    seasonal: '时令健康度',
+                    nutrition: '营养均衡度',
+                    tcm: '中医调和度',
+                    diversity: '饮食多样性'
+                };
+
+                item.innerHTML = `
+                    <div class="dimension-header">
+                        <span class="dimension-icon">${icons[key] || '📊'}</span>
+                        <span class="dimension-name">${labels[key] || key}</span>
+                        <span class="dimension-score">${dim.score}分</span>
+                    </div>
+                    <div class="dimension-bar">
+                        <div class="dimension-bar-fill" style="width: ${dim.score}%;"></div>
+                    </div>
+                `;
+                dimensionsList.appendChild(item);
+            });
+        }
+
+        const strengthsList = document.getElementById('score-strengths');
+        strengthsList.innerHTML = '';
+        if (this.healthScore.strengths && this.healthScore.strengths.length > 0) {
+            this.healthScore.strengths.forEach(s => {
+                const li = document.createElement('li');
+                li.className = 'advice-item';
+                li.textContent = s;
+                strengthsList.appendChild(li);
+            });
+        } else {
+            strengthsList.innerHTML = '<li class="advice-item">暂无数据</li>';
+        }
+
+        const improvementsList = document.getElementById('score-improvements');
+        improvementsList.innerHTML = '';
+        if (this.healthScore.improvements && this.healthScore.improvements.length > 0) {
+            this.healthScore.improvements.forEach(i => {
+                const li = document.createElement('li');
+                li.className = 'advice-item';
+                li.textContent = i;
+                improvementsList.appendChild(li);
+            });
+        } else {
+            improvementsList.innerHTML = '<li class="advice-item">暂无数据</li>';
+        }
+
+        const adviceList = document.getElementById('score-advice');
+        adviceList.innerHTML = '';
+        if (this.healthScore.advice && this.healthScore.advice.length > 0) {
+            this.healthScore.advice.forEach(a => {
+                const li = document.createElement('li');
+                li.className = 'recommendation-item';
+                li.textContent = a;
+                adviceList.appendChild(li);
+            });
+        }
+    }
+
+    generateScoreCard() {
+        alert('评分卡片生成功能开发中...');
+    }
+
+    bindCultureEvents() {
+        document.querySelectorAll('.season-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.filterSolarTermsBySeason(btn.dataset.season);
+            });
+        });
+
+        document.querySelectorAll('.guideline-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                this.switchGuidelineTab(tab.dataset.season);
+            });
+        });
+
+        document.querySelectorAll('.regional-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                this.switchRegionalTab(tab.dataset.region);
+            });
+        });
+
+        const closeTermModal = document.getElementById('close-term-modal');
+        if (closeTermModal) {
+            closeTermModal.addEventListener('click', () => {
+                document.getElementById('term-detail-modal').style.display = 'none';
+            });
+        }
+
+        const generateTermCardBtn = document.getElementById('generate-term-card-btn');
+        if (generateTermCardBtn) {
+            generateTermCardBtn.addEventListener('click', () => {
+                this.generateTermShareCard();
+            });
+        }
+    }
+
+    renderSolarTermsTimeline(filterSeason = 'all') {
+        const timeline = document.getElementById('terms-timeline');
+        if (!timeline || !this.solarTermsData || !this.solarTermsData.solar_terms) return;
+
+        timeline.innerHTML = '';
+
+        const seasonIcons = {
+            spring: '🌱',
+            summer: '☀️',
+            autumn: '🍂',
+            winter: '❄️'
+        };
+
+        const seasonNames = {
+            spring: '春季',
+            summer: '夏季',
+            autumn: '秋季',
+            winter: '冬季'
+        };
+
+        const seasonOrder = ['spring', 'summer', 'autumn', 'winter'];
+        const seasonsToShow = filterSeason === 'all' ? seasonOrder : [filterSeason];
+
+        seasonsToShow.forEach(season => {
+            const seasonTerms = Object.entries(this.solarTermsData.solar_terms)
+                .filter(([key, term]) => term.season === season);
+
+            if (seasonTerms.length === 0) return;
+
+            const seasonDiv = document.createElement('div');
+            seasonDiv.className = 'timeline-season';
+            seasonDiv.innerHTML = `
+                <div class="timeline-season-header">
+                    <span class="timeline-season-icon">${seasonIcons[season]}</span>
+                    <span class="timeline-season-name">${seasonNames[season]}</span>
+                </div>
+            `;
+
+            const termsContainer = document.createElement('div');
+            termsContainer.className = 'timeline-terms';
+
+            seasonTerms.forEach(([key, term]) => {
+                const termDiv = document.createElement('div');
+                termDiv.className = 'timeline-term';
+                termDiv.innerHTML = `
+                    <div class="timeline-term-icon">${term.icon}</div>
+                    <div class="timeline-term-info">
+                        <div class="timeline-term-name">${term.name}</div>
+                        <div class="timeline-term-date">${term.date_range.start} ~ ${term.date_range.end}</div>
+                    </div>
+                `;
+
+                termDiv.addEventListener('click', () => {
+                    this.showTermDetailModal(key);
+                });
+
+                termsContainer.appendChild(termDiv);
+            });
+
+            seasonDiv.appendChild(termsContainer);
+            timeline.appendChild(seasonDiv);
+        });
+    }
+
+    filterSolarTermsBySeason(season) {
+        document.querySelectorAll('.season-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.season === season);
+        });
+        this.renderSolarTermsTimeline(season);
+    }
+
+    switchGuidelineTab(season) {
+        document.querySelectorAll('.guideline-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.season === season);
+        });
+
+        if (this.solarTermsData && this.solarTermsData.seasonal_guidelines) {
+            const guideline = this.solarTermsData.seasonal_guidelines[season];
+            if (guideline) {
+                const content = document.getElementById('guidelines-content');
+                const seasonNames = {
+                    spring: '春季',
+                    summer: '夏季',
+                    autumn: '秋季',
+                    winter: '冬季'
+                };
+
+                content.innerHTML = `
+                    <div class="guideline-panel active">
+                        <h4>${seasonNames[season]}养生</h4>
+                        <p class="guideline-desc">${guideline.principle || ''}</p>
+                        <div class="guideline-details">
+                            <div class="guideline-item">
+                                <h5>饮食原则</h5>
+                                <p>${guideline.dietary_principle || ''}</p>
+                            </div>
+                            <div class="guideline-item">
+                                <h5>推荐食物</h5>
+                                <p>${(guideline.recommended || []).join('、')}</p>
+                            </div>
+                            <div class="guideline-item">
+                                <h5>避免食物</h5>
+                                <p>${(guideline.avoid || []).join('、')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    switchRegionalTab(region) {
+        document.querySelectorAll('.regional-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.region === region);
+        });
+
+        if (this.solarTermsData && this.solarTermsData.regional_adjustment) {
+            const adjustment = this.solarTermsData.regional_adjustment[region];
+            if (adjustment) {
+                const content = document.getElementById('regional-content');
+                const regionNames = {
+                    north: '北方地区',
+                    south: '南方地区',
+                    east: '华东地区',
+                    west: '西南地区'
+                };
+
+                let adjustmentsHtml = '';
+                if (adjustment.adjustments) {
+                    Object.entries(adjustment.adjustments).forEach(([season, desc]) => {
+                        const seasonNames = {
+                            spring: '春季',
+                            summer: '夏季',
+                            autumn: '秋季',
+                            winter: '冬季'
+                        };
+                        adjustmentsHtml += `
+                            <div class="adjustment-item">
+                                <h5>${seasonNames[season] || season}</h5>
+                                <p>${desc}</p>
+                            </div>
+                        `;
+                    });
+                }
+
+                content.innerHTML = `
+                    <div class="regional-panel active">
+                        <p class="regional-desc">${adjustment.description || ''}</p>
+                        <div class="regional-adjustments">
+                            ${adjustmentsHtml}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    async showTermDetailModal(termKey) {
+        try {
+            const response = await fetch(`/api/solar-term/${termKey}`);
+            const result = await response.json();
+
+            if (result.success) {
+                this.displayTermDetailModal(result.data);
+            }
+        } catch (error) {
+            console.error('Failed to load term detail:', error);
+        }
+    }
+
+    displayTermDetailModal(term) {
+        const modal = document.getElementById('term-detail-modal');
+        modal.style.display = 'flex';
+
+        document.getElementById('modal-term-name').textContent = term.name || '节气详情';
+        document.getElementById('modal-term-icon').textContent = term.icon || '🌱';
+        document.getElementById('modal-term-english').textContent = term.english_name || '';
+        
+        const seasonNames = {
+            spring: '春季',
+            summer: '夏季',
+            autumn: '秋季',
+            winter: '冬季'
+        };
+        document.getElementById('modal-term-season').textContent = seasonNames[term.season] || '';
+        document.getElementById('modal-term-date-range').textContent = 
+            `${term.date_range?.start || '-'} ~ ${term.date_range?.end || '-'}`;
+        document.getElementById('modal-term-description').textContent = term.description || '';
+
+        const customsList = document.getElementById('modal-term-customs');
+        customsList.innerHTML = '';
+        if (term.customs && term.customs.length > 0) {
+            term.customs.forEach(custom => {
+                const li = document.createElement('li');
+                li.className = 'custom-item';
+                li.innerHTML = `
+                    <span class="custom-icon">🎊</span>
+                    <span class="custom-text">${custom}</span>
+                `;
+                customsList.appendChild(li);
+            });
+        }
+
+        const recommendedList = document.getElementById('modal-term-recommended');
+        recommendedList.innerHTML = '';
+        if (term.dietary_advice && term.dietary_advice.recommended) {
+            term.dietary_advice.recommended.forEach(food => {
+                const li = document.createElement('li');
+                li.className = 'food-item';
+                li.innerHTML = `<span>✅</span> ${food}`;
+                recommendedList.appendChild(li);
+            });
+        }
+
+        const avoidList = document.getElementById('modal-term-avoid');
+        avoidList.innerHTML = '';
+        if (term.dietary_advice && term.dietary_advice.avoid) {
+            term.dietary_advice.avoid.forEach(food => {
+                const li = document.createElement('li');
+                li.className = 'food-item';
+                li.innerHTML = `<span>⚠️</span> ${food}`;
+                avoidList.appendChild(li);
+            });
+        }
+
+        const healthTipsList = document.getElementById('modal-term-health-tips');
+        healthTipsList.innerHTML = '';
+        if (term.health_tips && term.health_tips.length > 0) {
+            term.health_tips.forEach(tip => {
+                const li = document.createElement('li');
+                li.className = 'tip-item';
+                li.innerHTML = `<span>💡</span> ${tip}`;
+                healthTipsList.appendChild(li);
+            });
+        }
+
+        const culturalStory = document.getElementById('modal-term-cultural-story');
+        if (culturalStory) {
+            culturalStory.textContent = term.cultural_story || '';
+        }
+    }
+
+    generateTermShareCard() {
+        alert('节气卡片生成功能开发中...');
+    }
+
+    bindShareCardEvents() {
+        const generateShareCardBtn = document.getElementById('generate-share-card-btn');
+        if (generateShareCardBtn) {
+            generateShareCardBtn.addEventListener('click', () => {
+                this.openShareCardModal();
+            });
+        }
+
+        const closeShareCardModal = document.getElementById('close-share-card-modal');
+        if (closeShareCardModal) {
+            closeShareCardModal.addEventListener('click', () => {
+                document.getElementById('share-card-modal').style.display = 'none';
+            });
+        }
+
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.selectShareTheme(btn.dataset.theme);
+            });
+        });
+
+        const generateFinalBtn = document.getElementById('generate-share-card-final-btn');
+        if (generateFinalBtn) {
+            generateFinalBtn.addEventListener('click', () => {
+                this.generateShareCard();
+            });
+        }
+
+        const downloadShareCardBtn = document.getElementById('download-share-card-btn');
+        if (downloadShareCardBtn) {
+            downloadShareCardBtn.addEventListener('click', () => {
+                this.downloadShareCard();
+            });
+        }
+    }
+
+    openShareCardModal() {
+        if (!this.currentPackage) {
+            alert('请先抽取食匣再生成分享卡片');
+            return;
+        }
+        document.getElementById('share-card-modal').style.display = 'flex';
+    }
+
+    selectShareTheme(theme) {
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.theme === theme);
+        });
+        this.selectedShareTheme = theme;
+    }
+
+    async generateShareCard() {
+        if (!this.currentPackage) return;
+
+        const generateBtn = document.getElementById('generate-share-card-final-btn');
+        const originalText = generateBtn.innerHTML;
+        generateBtn.innerHTML = '<span class="loading"></span> 生成中...';
+        generateBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/share-card', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    package_data: this.currentPackage,
+                    theme: this.selectedShareTheme
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.shareCardDataUrl = result.data.image_url;
+                this.renderShareCardPreview();
+                
+                document.getElementById('download-share-card-btn').style.display = 'flex';
+            } else {
+                alert('生成失败：' + (result.message || '未知错误'));
+            }
+        } catch (error) {
+            console.error('Generate share card failed:', error);
+            alert('网络错误，请重试');
+        } finally {
+            generateBtn.innerHTML = originalText;
+            generateBtn.disabled = false;
+        }
+    }
+
+    renderShareCardPreview() {
+        const preview = document.getElementById('share-card-preview');
+        if (preview && this.shareCardDataUrl) {
+            preview.innerHTML = `<img src="${this.shareCardDataUrl}" alt="分享卡片">`;
+        }
+    }
+
+    downloadShareCard() {
+        if (!this.shareCardDataUrl) return;
+
+        const link = document.createElement('a');
+        link.download = `时节食匣分享卡_${Date.now()}.png`;
+        link.href = this.shareCardDataUrl;
+        link.click();
     }
 
     selectPackageType(option) {
