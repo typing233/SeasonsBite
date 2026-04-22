@@ -1254,7 +1254,7 @@ class SeasonsBite {
             ctx.fillText('发现时令美食的美好', canvas.width / 2, 135);
             ctx.globalAlpha = 1;
 
-            const pkg = this.currentPackage;
+            const pkg = this.currentPackage || {};
             let yOffset = 180;
 
             ctx.fillStyle = '#ffffff';
@@ -1264,14 +1264,16 @@ class SeasonsBite {
             const seasonIcons = { spring: '🌸', summer: '☀️', autumn: '🍂', winter: '❄️' };
             const seasonNames = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
             
+            const pkgSeason = pkg.season || 'spring';
+            
             ctx.font = '32px sans-serif';
             ctx.fillStyle = theme.accentText;
             ctx.textAlign = 'center';
-            ctx.fillText(seasonIcons[pkg.season] || '🍽️', canvas.width / 2, yOffset + 35);
+            ctx.fillText(seasonIcons[pkgSeason] || '🍽️', canvas.width / 2, yOffset + 35);
 
             ctx.font = 'bold 26px "Noto Serif SC", serif';
             ctx.fillStyle = theme.textColor;
-            ctx.fillText(`${seasonNames[pkg.season] || pkg.season}限定`, canvas.width / 2, yOffset + 70);
+            ctx.fillText(`${seasonNames[pkgSeason] || pkgSeason}限定`, canvas.width / 2, yOffset + 70);
 
             yOffset += 130;
 
@@ -1283,14 +1285,16 @@ class SeasonsBite {
             ctx.font = 'bold 32px "Noto Serif SC", serif';
             ctx.fillStyle = theme.accentText;
             ctx.textAlign = 'center';
-            ctx.fillText(`「${pkg.dish_name}」`, canvas.width / 2, yOffset);
+            const dishName = typeof pkg.dish_name === 'string' ? pkg.dish_name : '时令美食';
+            ctx.fillText(`「${dishName}」`, canvas.width / 2, yOffset);
 
             yOffset += 50;
 
             ctx.font = '24px sans-serif';
             ctx.fillStyle = theme.textColor;
             ctx.textAlign = 'left';
-            this.wrapText(ctx, pkg.description || '时令美味', 60, yOffset, canvas.width - 120, 35);
+            const description = typeof pkg.description === 'string' ? pkg.description : '时令美味';
+            this.wrapText(ctx, description, 60, yOffset, canvas.width - 120, 35);
 
             yOffset += 100;
 
@@ -1299,10 +1303,11 @@ class SeasonsBite {
             ctx.fillText('🥬 主要食材', 60, yOffset);
 
             yOffset += 40;
-            if (pkg.ingredients && pkg.ingredients.length > 0) {
+            const ingredients = Array.isArray(pkg.ingredients) ? pkg.ingredients : [];
+            if (ingredients.length > 0) {
                 ctx.font = '20px sans-serif';
                 ctx.fillStyle = '#555555';
-                this.wrapText(ctx, pkg.ingredients.join('、'), 60, yOffset, canvas.width - 120, 30);
+                this.wrapText(ctx, ingredients.join('、'), 60, yOffset, canvas.width - 120, 30);
             }
 
             yOffset += 80;
@@ -1312,17 +1317,18 @@ class SeasonsBite {
             ctx.fillText('📖 烹饪步骤', 60, yOffset);
 
             yOffset += 40;
-            if (pkg.steps && pkg.steps.length > 0) {
+            const steps = Array.isArray(pkg.steps) ? pkg.steps : [];
+            if (steps.length > 0) {
                 ctx.font = '18px sans-serif';
                 ctx.fillStyle = '#555555';
-                pkg.steps.slice(0, 3).forEach((step, index) => {
-                    const stepText = `${index + 1}. ${step}`;
+                steps.slice(0, 3).forEach((step, index) => {
+                    const stepText = `${index + 1}. ${String(step || '')}`;
                     this.wrapText(ctx, stepText, 60, yOffset, canvas.width - 120, 28);
                     yOffset += 60;
                 });
-                if (pkg.steps.length > 3) {
+                if (steps.length > 3) {
                     ctx.fillStyle = '#999999';
-                    ctx.fillText(`... 还有 ${pkg.steps.length - 3} 步`, 60, yOffset);
+                    ctx.fillText(`... 还有 ${steps.length - 3} 步`, 60, yOffset);
                 }
             }
 
@@ -1380,6 +1386,11 @@ class SeasonsBite {
     }
 
     wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        if (typeof text !== 'string') {
+            text = String(text || '');
+        }
+        if (!text) return;
+
         const words = text.split('');
         let line = '';
         let currentY = y;
