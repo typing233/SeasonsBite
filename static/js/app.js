@@ -245,25 +245,32 @@ class SeasonsBite {
             });
         });
 
-        const backToGameMenuBtn = document.getElementById('back-to-game-menu-btn');
-        if (backToGameMenuBtn) {
-            backToGameMenuBtn.addEventListener('click', () => this.showGameMenu());
-        }
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('[id]');
+            if (!target) return;
 
-        const submitChefChallengeBtn = document.getElementById('submit-chef-challenge-btn');
-        if (submitChefChallengeBtn) {
-            submitChefChallengeBtn.addEventListener('click', () => this.submitChefChallenge());
-        }
+            const id = target.id;
 
-        const matchGameBackBtn = document.getElementById('match-game-back-btn');
-        if (matchGameBackBtn) {
-            matchGameBackBtn.addEventListener('click', () => this.showGameMenu());
-        }
-
-        const badgesBackBtn = document.getElementById('badges-back-btn');
-        if (badgesBackBtn) {
-            badgesBackBtn.addEventListener('click', () => this.showGameMenu());
-        }
+            if (id === 'chef-back-btn' || id === 'match-back-btn') {
+                e.preventDefault();
+                this.showGameMenu();
+            } else if (id === 'chef-submit-btn') {
+                e.preventDefault();
+                this.submitChefChallenge();
+            } else if (id === 'chef-reset-btn') {
+                e.preventDefault();
+                this.resetChefSelection();
+            } else if (id === 'chef-play-again-btn') {
+                e.preventDefault();
+                this.startChefChallenge();
+            } else if (id === 'match-restart-btn') {
+                e.preventDefault();
+                this.startMatchGame();
+            } else if (id === 'match-play-again-btn') {
+                e.preventDefault();
+                this.startMatchGame();
+            }
+        });
     }
 
     bindSettingsEvents() {
@@ -2348,6 +2355,21 @@ class SeasonsBite {
             } else {
                 selectedPreview.style.display = 'none';
             }
+        }
+    }
+
+    resetChefSelection() {
+        this.selectedIngredients = [];
+        document.querySelectorAll('.ingredient-item.selected').forEach(item => {
+            item.classList.remove('selected');
+        });
+        const submitBtn = document.getElementById('chef-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+        }
+        const selectedPreview = document.getElementById('selected-preview');
+        if (selectedPreview) {
+            selectedPreview.style.display = 'none';
         }
     }
 
