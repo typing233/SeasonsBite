@@ -232,20 +232,18 @@ class SeasonsBite {
     }
 
     bindGamesEvents() {
-        const chefChallengeBtn = document.getElementById('start-chef-challenge-btn');
-        if (chefChallengeBtn) {
-            chefChallengeBtn.addEventListener('click', () => this.startChefChallenge());
-        }
-
-        const matchGameBtn = document.getElementById('start-match-game-btn');
-        if (matchGameBtn) {
-            matchGameBtn.addEventListener('click', () => this.startMatchGame());
-        }
-
-        const badgesBtn = document.getElementById('view-badges-btn');
-        if (badgesBtn) {
-            badgesBtn.addEventListener('click', () => this.showBadgesCollection());
-        }
+        document.querySelectorAll('.play-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const gameType = btn.dataset.game;
+                if (gameType === 'chef') {
+                    this.startChefChallenge();
+                } else if (gameType === 'match') {
+                    this.startMatchGame();
+                } else if (gameType === 'badges') {
+                    this.showBadgesCollection();
+                }
+            });
+        });
 
         const backToGameMenuBtn = document.getElementById('back-to-game-menu-btn');
         if (backToGameMenuBtn) {
@@ -2065,15 +2063,67 @@ class SeasonsBite {
 
     async loadPreferences() {
         try {
-            const response = await fetch('/api/preferences');
-            const result = await response.json();
+            const [categoriesResponse, preferencesResponse] = await Promise.all([
+                fetch('/api/excluded-categories'),
+                fetch('/api/preferences')
+            ]);
 
-            if (result.success) {
-                this.renderPreferences(result.data);
+            const categoriesResult = await categoriesResponse.json();
+            const preferencesResult = await preferencesResponse.json();
+
+            if (categoriesResult.success) {
+                this.renderExcludedCategories(categoriesResult.data);
+            }
+
+            if (preferencesResult.success) {
+                this.renderPreferences(preferencesResult.data);
             }
         } catch (error) {
             console.error('Load preferences failed:', error);
         }
+    }
+
+    renderExcludedCategories(categories) {
+        const container = document.getElementById('excluded-categories-list');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        const categoryIcons = {
+            'cilantro': '🌿',
+            'offal': '🫀',
+            'spicy': '🌶️',
+            'seafood': '🦐',
+            'mushroom': '🍄',
+            'egg': '🥚',
+            'milk': '🥛',
+            'nuts': '🥜'
+        };
+
+        categories.forEach(category => {
+            const icon = categoryIcons[category.key] || '🍽️';
+            const categoryHtml = `
+                <label class="excluded-category">
+                    <input type="checkbox" class="category-checkbox" data-category="${category.key}">
+                    <span class="category-icon">${icon}</span>
+                    <span class="category-name">${category.name}</span>
+                </label>
+            `;
+            container.insertAdjacentHTML('beforeend', categoryHtml);
+        });
+
+        container.querySelectorAll('.excluded-category').forEach(label => {
+            const checkbox = label.querySelector('input[type="checkbox"]');
+            label.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    checkbox.checked = !checkbox.checked;
+                    label.classList.toggle('selected', checkbox.checked);
+                } else {
+                    label.classList.toggle('selected', checkbox.checked);
+                }
+            });
+        });
     }
 
     renderPreferences(preferences) {
@@ -2223,10 +2273,13 @@ class SeasonsBite {
     }
 
     async startChefChallenge() {
-        document.getElementById('game-menu').style.display = 'none';
+        const gamesMenu = document.querySelector('.games-menu');
+        if (gamesMenu) {
+            gamesMenu.style.display = 'none';
+        }
         document.getElementById('chef-challenge-game').style.display = 'block';
-        document.getElementById('chef-challenge-loading').style.display = 'block';
-        document.getElementById('chef-challenge-content').style.display = 'none';
+        document.getElementById('chef-loading').style.display = 'block';
+        document.getElementById('chef-game-content').style.display = 'none';
 
         try {
             const response = await fetch('/api/games/chef-challenge', { method: 'GET' });
@@ -2244,16 +2297,14 @@ class SeasonsBite {
     }
 
     renderChefChallenge(challenge) {
-        document.getElementById('chef-challenge-loading').style.display = 'none';
-        document.getElementById('chef-challenge-content').style.display = 'block';
-        document.getElementById('chef-challenge-result').style.display = 'none';
+        document.getElementById('chef-loading').style.display = 'none';
+        document.getElementById('chef-game-content').style.display = 'block';
+        document.getElementById('chef-result').style.display = 'none';
 
-        document.getElementById('challenge-term-name').textContent = challenge.term_name || '未知节气';
-        document.getElementById('challenge-term-icon').textContent = challenge.term_icon || '🌱';
-        document.getElementById('challenge-difficulty').textContent = challenge.difficulty || '中等';
-        document.getElementById('challenge-time-limit').textContent = `${challenge.time_limit || 120}秒`;
+        document.getElementById('chef-term-name').textContent = challenge.term_name || '未知节气';
+        document.getElementById('chef-term-icon').textContent = challenge.term_icon || '🌱';
 
-        const ingredientsContainer = document.getElementById('challenge-ingredients');
+        const ingredientsContainer = document.getElementById('ingredients-grid');
         if (ingredientsContainer && challenge.available_ingredients) {
             ingredientsContainer.innerHTML = '';
             challenge.available_ingredients.forEach((ingredient, index) => {
@@ -2282,6 +2333,22 @@ class SeasonsBite {
         document.querySelectorAll('.ingredient-item.selected').forEach(item => {
             this.selectedIngredients.push(item.dataset.ingredient);
         });
+
+        const submitBtn = document.getElementById('chef-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = this.selectedIngredients.length === 0;
+        }
+
+        const selectedPreview = document.getElementById('selected-preview');
+        const selectedList = document.getElementById('selected-list');
+        if (selectedPreview && selectedList) {
+            if (this.selectedIngredients.length > 0) {
+                selectedPreview.style.display = 'block';
+                selectedList.innerHTML = this.selectedIngredients.map(i => `<span class="selected-tag">${i}</span>`).join('');
+            } else {
+                selectedPreview.style.display = 'none';
+            }
+        }
     }
 
     async submitChefChallenge() {
@@ -2315,40 +2382,40 @@ class SeasonsBite {
     }
 
     renderChefChallengeResult(result) {
-        document.getElementById('chef-challenge-content').style.display = 'none';
-        document.getElementById('chef-challenge-result').style.display = 'block';
+        document.getElementById('chef-game-content').style.display = 'none';
+        document.getElementById('chef-result').style.display = 'block';
 
-        document.getElementById('result-score').textContent = result.score || 0;
-        document.getElementById('result-grade').textContent = result.grade || 'C';
-        document.getElementById('result-correct-count').textContent = result.correct_count || 0;
-        document.getElementById('result-total-count').textContent = result.total_count || 0;
-        document.getElementById('result-accuracy').textContent = `${result.accuracy || 0}%`;
+        document.getElementById('chef-score').textContent = result.score || 0;
 
-        if (result.new_badges && result.new_badges.length > 0) {
-            const newBadgesContainer = document.getElementById('new-badges');
-            if (newBadgesContainer) {
-                newBadgesContainer.style.display = 'block';
-                const badgesGrid = newBadgesContainer.querySelector('.new-badges-grid');
-                if (badgesGrid) {
-                    badgesGrid.innerHTML = '';
-                    result.new_badges.forEach(badge => {
-                        const badgeHtml = `
-                            <div class="new-badge-item">
-                                <div class="badge-icon">${badge.icon || '🏅'}</div>
-                                <div class="badge-name">${badge.name}</div>
-                            </div>
-                        `;
-                        badgesGrid.insertAdjacentHTML('beforeend', badgeHtml);
-                    });
-                }
+        if (result.correct_list) {
+            const correctList = document.getElementById('chef-correct-list');
+            if (correctList) {
+                correctList.innerHTML = result.correct_list.map(i => `<span class="correct-tag">${i}</span>`).join('');
             }
         }
     }
 
+    showGameMenu() {
+        const gamesMenu = document.querySelector('.games-menu');
+        if (gamesMenu) {
+            gamesMenu.style.display = 'grid';
+        }
+        document.getElementById('chef-challenge-game').style.display = 'none';
+        document.getElementById('match-game').style.display = 'none';
+
+        const badgesCollection = document.getElementById('badges-collection');
+        if (badgesCollection) {
+            badgesCollection.style.display = 'none';
+        }
+    }
+
     async startMatchGame() {
-        document.getElementById('game-menu').style.display = 'none';
+        const gamesMenu = document.querySelector('.games-menu');
+        if (gamesMenu) {
+            gamesMenu.style.display = 'none';
+        }
         document.getElementById('match-game').style.display = 'block';
-        document.getElementById('match-game-loading').style.display = 'block';
+        document.getElementById('match-loading').style.display = 'block';
         document.getElementById('match-game-content').style.display = 'none';
 
         try {
@@ -2367,9 +2434,9 @@ class SeasonsBite {
     }
 
     renderMatchGame(game) {
-        document.getElementById('match-game-loading').style.display = 'none';
+        document.getElementById('match-loading').style.display = 'none';
         document.getElementById('match-game-content').style.display = 'block';
-        document.getElementById('match-game-result').style.display = 'none';
+        document.getElementById('match-result').style.display = 'none';
 
         this.matchGameTimer = game.time_limit || 120;
         this.matchGamePairs = game.pairs || [];
@@ -2390,7 +2457,7 @@ class SeasonsBite {
     }
 
     renderMatchGameCards(terms, ingredients) {
-        const gameBoard = document.querySelector('.match-game-board');
+        const gameBoard = document.getElementById('match-grid');
         if (!gameBoard) return;
 
         gameBoard.innerHTML = '';
@@ -2485,8 +2552,8 @@ class SeasonsBite {
             this.matchGameMatchedCount++;
 
             const totalPairs = this.matchGamePairs.length;
-            document.getElementById('match-game-matched').textContent = this.matchGameMatchedCount;
-            document.getElementById('match-game-total').textContent = totalPairs;
+            document.getElementById('match-pairs').textContent = this.matchGameMatchedCount;
+            document.getElementById('match-total').textContent = totalPairs;
 
             if (this.matchGameMatchedCount >= totalPairs) {
                 this.endMatchGame();
@@ -2509,7 +2576,7 @@ class SeasonsBite {
     updateMatchGameTimer() {
         const minutes = Math.floor(this.matchGameTimer / 60);
         const seconds = this.matchGameTimer % 60;
-        document.getElementById('match-game-timer').textContent = 
+        document.getElementById('match-timer').textContent = 
             `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
@@ -2548,15 +2615,16 @@ class SeasonsBite {
 
     renderMatchGameResult(result) {
         document.getElementById('match-game-content').style.display = 'none';
-        document.getElementById('match-game-result').style.display = 'block';
+        document.getElementById('match-result').style.display = 'block';
 
-        document.getElementById('match-result-score').textContent = result.score || 0;
-        document.getElementById('match-result-matched').textContent = result.matched_pairs || 0;
-        document.getElementById('match-result-time').textContent = result.time_used || 0;
+        document.getElementById('match-score').textContent = result.score || 0;
     }
 
     async showBadgesCollection() {
-        document.getElementById('game-menu').style.display = 'none';
+        const gamesMenu = document.querySelector('.games-menu');
+        if (gamesMenu) {
+            gamesMenu.style.display = 'none';
+        }
         document.getElementById('badges-collection').style.display = 'block';
 
         try {
