@@ -25,6 +25,9 @@
                 <button class="nav-tab active" data-tab="draw">
                     <span>🎲</span> 抽取食匣
                 </button>
+                <button class="nav-tab" data-tab="games">
+                    <span>🎮</span> 小游戏
+                </button>
                 <button class="nav-tab" data-tab="location">
                     <span>📍</span> 位置感知
                 </button>
@@ -36,6 +39,9 @@
                 </button>
                 <button class="nav-tab" data-tab="culture">
                     <span>📚</span> 节气科普
+                </button>
+                <button class="nav-tab" data-tab="settings">
+                    <span>⚙️</span> 设置
                 </button>
             </div>
         </nav>
@@ -172,6 +178,28 @@
                 </section>
 
                 <section id="draw-section" class="draw-section">
+                    <div class="draw-mode-selector">
+                        <h3>选择抽取模式</h3>
+                        <div class="mode-options">
+                            <label class="mode-option active" data-mode="personalized">
+                                <input type="radio" name="draw_mode" value="personalized" checked>
+                                <div class="mode-card">
+                                    <div class="mode-icon">🤖</div>
+                                    <div class="mode-label">AI智能推荐</div>
+                                    <div class="mode-detail">基于您的饮食记录、体质偏好和健康评分，智能推荐个性化菜品</div>
+                                </div>
+                            </label>
+                            <label class="mode-option" data-mode="random">
+                                <input type="radio" name="draw_mode" value="random">
+                                <div class="mode-card">
+                                    <div class="mode-icon">🎲</div>
+                                    <div class="mode-label">纯随机模式</div>
+                                    <div class="mode-detail">完全随机抽取，体验盲盒的惊喜感</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="package-selector">
                         <h3>选择套餐规格</h3>
                         <div class="package-options">
@@ -202,6 +230,16 @@
                     <div class="result-header">
                         <h2 class="result-title">今日食匣</h2>
                         <p class="result-subtitle" id="result-season"></p>
+                    </div>
+
+                    <div id="reason-section" class="reason-section" style="display: none;">
+                        <div class="reason-card">
+                            <div class="reason-icon">📜</div>
+                            <div class="reason-content">
+                                <h4>今日推荐理由</h4>
+                                <p class="reason-text" id="reason-text"></p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="cards-container" id="cards-container">
@@ -664,6 +702,341 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <section id="games-section" class="tab-content" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>🎮</span> 节气小游戏
+                    </h2>
+                    <p class="section-subtitle">沉浸式体验节气文化，赢取专属徽章</p>
+                </div>
+
+                <div class="games-menu">
+                    <div class="game-card" data-game="chef">
+                        <div class="game-icon">👨‍🍳</div>
+                        <div class="game-info">
+                            <h3>今日节气主厨挑战</h3>
+                            <p>根据给定节气与食材搭配养生菜品</p>
+                            <div class="game-badge-preview">
+                                <span class="badge-icon">🏆</span> 可获得节气徽章
+                            </div>
+                        </div>
+                        <button class="play-btn" data-game="chef">开始挑战</button>
+                    </div>
+
+                    <div class="game-card" data-game="match">
+                        <div class="game-icon">🎯</div>
+                        <div class="game-info">
+                            <h3>食材连连看节气版</h3>
+                            <p>匹配食材与对应节气</p>
+                            <div class="game-badge-preview">
+                                <span class="badge-icon">⚡</span> 速度之王等你挑战
+                            </div>
+                        </div>
+                        <button class="play-btn" data-game="match">开始游戏</button>
+                    </div>
+
+                    <div class="game-card" data-game="badges">
+                        <div class="game-icon">🎖️</div>
+                        <div class="game-info">
+                            <h3>我的徽章收藏</h3>
+                            <p>查看已获得的节气徽章</p>
+                            <div class="game-badge-preview">
+                                <span class="badge-count" id="badge-count">0</span> / 9 已解锁
+                            </div>
+                        </div>
+                        <button class="play-btn" data-game="badges">查看徽章</button>
+                    </div>
+                </div>
+
+                <div id="chef-challenge-game" class="game-container" style="display: none;">
+                    <div class="game-header">
+                        <h3 class="game-title">
+                            <span>👨‍🍳</span> 今日节气主厨挑战
+                        </h3>
+                        <button class="back-btn" id="chef-back-btn">← 返回</button>
+                    </div>
+
+                    <div id="chef-loading" class="game-loading">
+                        <div class="loading-icon">⏳</div>
+                        <p>正在准备挑战...</p>
+                    </div>
+
+                    <div id="chef-game-content" style="display: none;">
+                        <div class="challenge-info">
+                            <div class="term-display">
+                                <span class="term-icon" id="chef-term-icon">🌱</span>
+                                <span class="term-name" id="chef-term-name">立春</span>
+                            </div>
+                            <p class="challenge-theme" id="chef-theme">春回大地，宜温补阳气</p>
+                            <p class="challenge-desc" id="chef-challenge-desc">为立春节气搭配合适的养生食材</p>
+                        </div>
+
+                        <div class="challenge-instructions">
+                            <p>💡 请选择 <span id="required-count">3</span> 种适合当前节气的养生食材</p>
+                        </div>
+
+                        <div class="ingredients-grid" id="ingredients-grid">
+                        </div>
+
+                        <div class="selected-preview" id="selected-preview" style="display: none;">
+                            <h4>已选择的食材：</h4>
+                            <div class="selected-list" id="selected-list">
+                            </div>
+                        </div>
+
+                        <div class="game-actions">
+                            <button id="chef-submit-btn" class="action-btn primary" disabled>
+                                <span>✅</span> 提交答案
+                            </button>
+                            <button id="chef-reset-btn" class="action-btn secondary">
+                                <span>🔄</span> 重新选择
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="chef-result" class="game-result" style="display: none;">
+                        <div class="result-icon" id="chef-result-icon">🌟</div>
+                        <h3 class="result-title" id="chef-result-title">挑战成功！</h3>
+                        <div class="result-score">
+                            <span class="score-label">得分：</span>
+                            <span class="score-value" id="chef-score">0</span>
+                            <span class="score-unit">分</span>
+                        </div>
+                        <p class="result-message" id="chef-result-message"></p>
+                        
+                        <div class="result-details" id="chef-result-details" style="display: none;">
+                            <h4>答题详情：</h4>
+                            <div class="detail-section">
+                                <h5>✅ 正确选择：</h5>
+                                <div class="correct-list" id="chef-correct-list"></div>
+                            </div>
+                            <div class="detail-section" id="chef-incorrect-section" style="display: none;">
+                                <h5>❌ 错误选择：</h5>
+                                <div class="incorrect-list" id="chef-incorrect-list"></div>
+                            </div>
+                            <div class="detail-section" id="chef-missed-section" style="display: none;">
+                                <h5>💡 错过了这些：</h5>
+                                <div class="missed-list" id="chef-missed-list"></div>
+                            </div>
+                        </div>
+
+                        <div class="earned-badges" id="chef-earned-badges" style="display: none;">
+                            <h4>🎖️ 获得徽章：</h4>
+                            <div class="badges-list" id="chef-badges-list"></div>
+                        </div>
+
+                        <div class="game-actions">
+                            <button id="chef-play-again-btn" class="action-btn primary">
+                                <span>🔄</span> 再玩一次
+                            </button>
+                            <button id="chef-share-btn" class="action-btn secondary">
+                                <span>📱</span> 分享成绩
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="match-game" class="game-container" style="display: none;">
+                    <div class="game-header">
+                        <h3 class="game-title">
+                            <span>🎯</span> 食材连连看节气版
+                        </h3>
+                        <div class="game-stats">
+                            <span class="stat-item">
+                                <span class="stat-icon">⏱️</span>
+                                <span id="match-timer">00:00</span>
+                            </span>
+                            <span class="stat-item">
+                                <span class="stat-icon">✨</span>
+                                <span id="match-pairs">0</span> / <span id="match-total">0</span>
+                            </span>
+                        </div>
+                        <button class="back-btn" id="match-back-btn">← 返回</button>
+                    </div>
+
+                    <div id="match-loading" class="game-loading">
+                        <div class="loading-icon">⏳</div>
+                        <p>正在准备游戏...</p>
+                    </div>
+
+                    <div id="match-game-content" style="display: none;">
+                        <div class="challenge-info">
+                            <div class="term-display">
+                                <span class="term-icon" id="match-term-icon">🌱</span>
+                                <span class="term-name" id="match-term-name">立春</span>
+                            </div>
+                            <p class="challenge-desc">将食材与对应的节气进行配对</p>
+                        </div>
+
+                        <div class="match-grid" id="match-grid">
+                        </div>
+
+                        <div class="game-actions">
+                            <button id="match-restart-btn" class="action-btn secondary">
+                                <span>🔄</span> 重新开始
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="match-result" class="game-result" style="display: none;">
+                        <div class="result-icon" id="match-result-icon">🌟</div>
+                        <h3 class="result-title" id="match-result-title">游戏完成！</h3>
+                        <div class="result-score">
+                            <span class="score-label">得分：</span>
+                            <span class="score-value" id="match-score">0</span>
+                            <span class="score-unit">分</span>
+                        </div>
+                        <div class="result-details">
+                            <p>用时：<span id="match-time-spent">00:00</span></p>
+                            <p>时间奖励：<span id="match-time-bonus">0</span> 分</p>
+                        </div>
+                        <p class="result-message" id="match-result-message"></p>
+
+                        <div class="earned-badges" id="match-earned-badges" style="display: none;">
+                            <h4>🎖️ 获得徽章：</h4>
+                            <div class="badges-list" id="match-badges-list"></div>
+                        </div>
+
+                        <div class="game-actions">
+                            <button id="match-play-again-btn" class="action-btn primary">
+                                <span>🔄</span> 再玩一次
+                            </button>
+                            <button id="match-share-btn" class="action-btn secondary">
+                                <span>📱</span> 分享成绩
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="badges-collection" class="game-container" style="display: none;">
+                    <div class="game-header">
+                        <h3 class="game-title">
+                            <span>🎖️</span> 我的徽章收藏
+                        </h3>
+                        <div class="badge-stats">
+                            <span id="badges-unlocked">0</span> / <span id="badges-total">9</span> 已解锁
+                        </div>
+                        <button class="back-btn" id="badges-back-btn">← 返回</button>
+                    </div>
+
+                    <div class="badges-grid" id="badges-grid">
+                    </div>
+                </div>
+            </section>
+
+            <section id="settings-section" class="tab-content" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span>⚙️</span> 个性化设置
+                    </h2>
+                    <p class="section-subtitle">配置您的饮食偏好，获取更精准的推荐</p>
+                </div>
+
+                <div class="settings-card">
+                    <h3 class="settings-title">
+                        <span>🚫</span> 食材排除设置
+                    </h3>
+                    <p class="settings-desc">选择您不喜欢的食材类别，这些将从推荐中排除</p>
+                    
+                    <div class="excluded-categories" id="excluded-categories-list">
+                        <div class="loading-state">
+                            <div class="loading-icon">⏳</div>
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3 class="settings-title">
+                        <span>👅</span> 口味偏好
+                    </h3>
+                    <p class="settings-desc">选择您的口味偏好，我们会为您推荐更合适的菜品</p>
+                    
+                    <div class="taste-preferences">
+                        <label class="taste-option">
+                            <input type="radio" name="taste_preference" value="light">
+                            <div class="taste-card">
+                                <div class="taste-icon">🥗</div>
+                                <div class="taste-label">清淡</div>
+                                <div class="taste-desc">喜欢清蒸、清炒等清淡口味</div>
+                            </div>
+                        </label>
+                        <label class="taste-option">
+                            <input type="radio" name="taste_preference" value="balanced" checked>
+                            <div class="taste-card">
+                                <div class="taste-icon">⚖️</div>
+                                <div class="taste-label">均衡</div>
+                                <div class="taste-desc">各种口味都可以接受</div>
+                            </div>
+                        </label>
+                        <label class="taste-option">
+                            <input type="radio" name="taste_preference" value="rich">
+                            <div class="taste-card">
+                                <div class="taste-icon">🍖</div>
+                                <div class="taste-label">浓郁</div>
+                                <div class="taste-desc">喜欢红烧、焖炖等浓郁口味</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3 class="settings-title">
+                        <span>💪</span> 体质类型
+                    </h3>
+                    <p class="settings-desc">根据您的体质类型，我们会提供更合适的养生推荐</p>
+                    
+                    <div class="constitution-types">
+                        <label class="constitution-option">
+                            <input type="radio" name="constitution_type" value="balanced" checked>
+                            <div class="constitution-card">
+                                <div class="constitution-icon">⚖️</div>
+                                <div class="constitution-label">平和体质</div>
+                                <div class="constitution-desc">阴阳气血调和，体态适中</div>
+                            </div>
+                        </label>
+                        <label class="constitution-option">
+                            <input type="radio" name="constitution_type" value="cold">
+                            <div class="constitution-card">
+                                <div class="constitution-icon">❄️</div>
+                                <div class="constitution-label">寒性体质</div>
+                                <div class="constitution-desc">怕冷，手脚冰凉，喜热饮</div>
+                            </div>
+                        </label>
+                        <label class="constitution-option">
+                            <input type="radio" name="constitution_type" value="hot">
+                            <div class="constitution-card">
+                                <div class="constitution-icon">🔥</div>
+                                <div class="constitution-label">热性体质</div>
+                                <div class="constitution-desc">怕热，口干舌燥，喜冷饮</div>
+                            </div>
+                        </label>
+                        <label class="constitution-option">
+                            <input type="radio" name="constitution_type" value="damp">
+                            <div class="constitution-card">
+                                <div class="constitution-icon">💧</div>
+                                <div class="constitution-label">湿性体质</div>
+                                <div class="constitution-desc">身体沉重，容易困倦，痰多</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button id="save-settings-btn" class="action-btn primary">
+                        <span>💾</span> 保存设置
+                    </button>
+                    <button id="reset-settings-btn" class="action-btn secondary">
+                        <span>🔄</span> 恢复默认
+                    </button>
+                </div>
+
+                <div id="save-success-toast" class="toast" style="display: none;">
+                    <span class="toast-icon">✅</span>
+                    <span class="toast-message">设置保存成功！</span>
                 </div>
             </section>
         </main>

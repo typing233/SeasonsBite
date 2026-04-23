@@ -201,6 +201,9 @@ class SeasonsBite {
         this.bindHealthEvents();
         this.bindCultureEvents();
         this.bindShareCardEvents();
+        this.bindDrawModeEvents();
+        this.bindGamesEvents();
+        this.bindSettingsEvents();
 
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', (e) => {
@@ -219,6 +222,78 @@ class SeasonsBite {
         });
     }
 
+    bindDrawModeEvents() {
+        document.querySelectorAll('.mode-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+    }
+
+    bindGamesEvents() {
+        const chefChallengeBtn = document.getElementById('start-chef-challenge-btn');
+        if (chefChallengeBtn) {
+            chefChallengeBtn.addEventListener('click', () => this.startChefChallenge());
+        }
+
+        const matchGameBtn = document.getElementById('start-match-game-btn');
+        if (matchGameBtn) {
+            matchGameBtn.addEventListener('click', () => this.startMatchGame());
+        }
+
+        const badgesBtn = document.getElementById('view-badges-btn');
+        if (badgesBtn) {
+            badgesBtn.addEventListener('click', () => this.showBadgesCollection());
+        }
+
+        const backToGameMenuBtn = document.getElementById('back-to-game-menu-btn');
+        if (backToGameMenuBtn) {
+            backToGameMenuBtn.addEventListener('click', () => this.showGameMenu());
+        }
+
+        const submitChefChallengeBtn = document.getElementById('submit-chef-challenge-btn');
+        if (submitChefChallengeBtn) {
+            submitChefChallengeBtn.addEventListener('click', () => this.submitChefChallenge());
+        }
+
+        const matchGameBackBtn = document.getElementById('match-game-back-btn');
+        if (matchGameBackBtn) {
+            matchGameBackBtn.addEventListener('click', () => this.showGameMenu());
+        }
+
+        const badgesBackBtn = document.getElementById('badges-back-btn');
+        if (badgesBackBtn) {
+            badgesBackBtn.addEventListener('click', () => this.showGameMenu());
+        }
+    }
+
+    bindSettingsEvents() {
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener('click', () => this.savePreferences());
+        }
+
+        const resetSettingsBtn = document.getElementById('reset-settings-btn');
+        if (resetSettingsBtn) {
+            resetSettingsBtn.addEventListener('click', () => this.resetPreferences());
+        }
+
+        document.querySelectorAll('.taste-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.taste-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+
+        document.querySelectorAll('.constitution-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.constitution-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+    }
+
     switchTab(tabName) {
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.classList.toggle('active', tab.dataset.tab === tabName);
@@ -229,7 +304,9 @@ class SeasonsBite {
             'location': 'location-section',
             'records': 'records-section',
             'health': 'health-section',
-            'culture': 'culture-section'
+            'culture': 'culture-section',
+            'games': 'games-section',
+            'settings': 'settings-section'
         };
 
         Object.entries(tabContents).forEach(([tab, sectionId]) => {
@@ -247,6 +324,10 @@ class SeasonsBite {
             this.renderSolarTermsTimeline();
         } else if (tabName === 'records') {
             this.loadRecords();
+        } else if (tabName === 'games') {
+            this.loadBadges();
+        } else if (tabName === 'settings') {
+            this.loadPreferences();
         }
     }
 
@@ -1483,15 +1564,20 @@ class SeasonsBite {
         drawBtn.innerHTML = '<span class="loading"></span> 抽取中...';
         drawBtn.disabled = true;
 
+        const selectedMode = document.querySelector('.mode-option.selected');
+        const drawMode = selectedMode ? selectedMode.dataset.mode : 'personalized';
+
         try {
             const response = await fetch(
-                `/api/draw?package_type=${this.selectedPackageType}`,
+                `/api/draw?package_type=${this.selectedPackageType}&draw_mode=${drawMode}`,
                 { method: 'POST' }
             );
             const result = await response.json();
 
             if (result.success) {
                 this.currentPackage = result.data;
+                this.currentDrawReason = result.reason;
+                this.currentDrawMode = drawMode;
                 this.showResult();
             } else {
                 alert('抽取失败，请重试');
@@ -1511,6 +1597,19 @@ class SeasonsBite {
 
         const resultSubtitle = document.getElementById('result-season');
         resultSubtitle.textContent = `${this.currentPackage.season_name} · ${this.currentPackage.season_desc}`;
+
+        const reasonCard = document.getElementById('reason-card');
+        if (this.currentDrawReason && reasonCard) {
+            reasonCard.style.display = 'block';
+            document.getElementById('reason-text').textContent = this.currentDrawReason.text;
+            document.getElementById('reason-description').textContent = this.currentDrawReason.description || '';
+            const modeIndicator = document.getElementById('mode-indicator');
+            if (modeIndicator) {
+                modeIndicator.textContent = this.currentDrawMode === 'personalized' ? 'AI智能推荐' : '纯随机';
+            }
+        } else if (reasonCard) {
+            reasonCard.style.display = 'none';
+        }
 
         this.renderCards();
     }
@@ -1660,9 +1759,12 @@ class SeasonsBite {
         const currentIds = this.currentPackage[dishType].map(d => d.id);
         const excludeIds = [wrapper.dataset.id];
 
+        const selectedMode = document.querySelector('.mode-option.selected');
+        const drawMode = selectedMode ? selectedMode.dataset.mode : (this.currentDrawMode || 'personalized');
+
         try {
             const response = await fetch(
-                `/api/redraw?dish_type=${dishType}&season=${this.currentSeason}&exclude_ids=${excludeIds.join(',')}&current_ids=${currentIds.join(',')}`,
+                `/api/redraw?dish_type=${dishType}&season=${this.currentSeason}&exclude_ids=${excludeIds.join(',')}&current_ids=${currentIds.join(',')}&draw_mode=${drawMode}`,
                 { method: 'POST' }
             );
             const result = await response.json();
@@ -1959,6 +2061,534 @@ class SeasonsBite {
         link.download = `时节食匣_${this.currentPackage.season_name}_${Date.now()}.png`;
         link.href = this.screenshotDataUrl;
         link.click();
+    }
+
+    async loadPreferences() {
+        try {
+            const response = await fetch('/api/preferences');
+            const result = await response.json();
+
+            if (result.success) {
+                this.renderPreferences(result.data);
+            }
+        } catch (error) {
+            console.error('Load preferences failed:', error);
+        }
+    }
+
+    renderPreferences(preferences) {
+        if (preferences.excluded_ingredients) {
+            preferences.excluded_ingredients.forEach(category => {
+                const checkbox = document.querySelector(`input[data-category="${category}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                    checkbox.closest('.excluded-category')?.classList.add('selected');
+                }
+            });
+        }
+
+        if (preferences.taste_preference) {
+            document.querySelectorAll('.taste-option').forEach(option => {
+                if (option.dataset.taste === preferences.taste_preference) {
+                    option.classList.add('selected');
+                    const radio = option.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+        }
+
+        if (preferences.constitution_type) {
+            document.querySelectorAll('.constitution-option').forEach(option => {
+                if (option.dataset.constitution === preferences.constitution_type) {
+                    option.classList.add('selected');
+                    const radio = option.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+        }
+    }
+
+    async savePreferences() {
+        const excludedIngredients = [];
+        document.querySelectorAll('input[data-category]:checked').forEach(input => {
+            excludedIngredients.push(input.dataset.category);
+        });
+
+        const selectedTaste = document.querySelector('.taste-option.selected');
+        const tastePreference = selectedTaste ? selectedTaste.dataset.taste : 'balanced';
+
+        const selectedConstitution = document.querySelector('.constitution-option.selected');
+        const constitutionType = selectedConstitution ? selectedConstitution.dataset.constitution : 'balanced';
+
+        try {
+            const response = await fetch('/api/preferences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    excluded_ingredients: excludedIngredients,
+                    taste_preference: tastePreference,
+                    constitution_type: constitutionType
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showToast('设置已保存！');
+            } else {
+                alert('保存失败，请重试');
+            }
+        } catch (error) {
+            console.error('Save preferences failed:', error);
+            alert('保存失败，请检查网络连接');
+        }
+    }
+
+    resetPreferences() {
+        document.querySelectorAll('input[data-category]').forEach(input => {
+            input.checked = false;
+            input.closest('.excluded-category')?.classList.remove('selected');
+        });
+
+        document.querySelectorAll('.taste-option').forEach((option, index) => {
+            option.classList.toggle('selected', index === 1);
+            const radio = option.querySelector('input[type="radio"]');
+            if (radio) radio.checked = index === 1;
+        });
+
+        document.querySelectorAll('.constitution-option').forEach((option, index) => {
+            option.classList.toggle('selected', index === 0);
+            const radio = option.querySelector('input[type="radio"]');
+            if (radio) radio.checked = index === 0;
+        });
+
+        this.showToast('已恢复默认设置');
+    }
+
+    showToast(message) {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.querySelector('.toast-message').textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+    }
+
+    showGameMenu() {
+        document.getElementById('game-menu').style.display = 'block';
+        document.getElementById('chef-challenge-game').style.display = 'none';
+        document.getElementById('match-game').style.display = 'none';
+        document.getElementById('badges-collection').style.display = 'none';
+    }
+
+    async loadBadges() {
+        try {
+            const response = await fetch('/api/games/badges');
+            const result = await response.json();
+
+            if (result.success) {
+                this.renderBadgesSummary(result.data);
+            }
+        } catch (error) {
+            console.error('Load badges failed:', error);
+        }
+    }
+
+    renderBadgesSummary(data) {
+        const total = data.total_count || (data.badges ? data.badges.length : 0);
+        const unlocked = data.unlocked_count || (data.badges ? data.badges.filter(b => b.unlocked).length : 0);
+
+        const statsElement = document.querySelector('.badges-stats');
+        if (statsElement) {
+            statsElement.innerHTML = `
+                <span class="stat-item">
+                    <span class="stat-value">${unlocked}</span>
+                    <span class="stat-label">已解锁</span>
+                </span>
+                <span class="stat-item">
+                    <span class="stat-value">${total}</span>
+                    <span class="stat-label">总徽章</span>
+                </span>
+            `;
+        }
+    }
+
+    async startChefChallenge() {
+        document.getElementById('game-menu').style.display = 'none';
+        document.getElementById('chef-challenge-game').style.display = 'block';
+        document.getElementById('chef-challenge-loading').style.display = 'block';
+        document.getElementById('chef-challenge-content').style.display = 'none';
+
+        try {
+            const response = await fetch('/api/games/chef-challenge', { method: 'GET' });
+            const result = await response.json();
+
+            if (result.success) {
+                this.currentChefChallenge = result.data;
+                this.renderChefChallenge(result.data);
+            }
+        } catch (error) {
+            console.error('Start chef challenge failed:', error);
+            alert('加载失败，请重试');
+            this.showGameMenu();
+        }
+    }
+
+    renderChefChallenge(challenge) {
+        document.getElementById('chef-challenge-loading').style.display = 'none';
+        document.getElementById('chef-challenge-content').style.display = 'block';
+        document.getElementById('chef-challenge-result').style.display = 'none';
+
+        document.getElementById('challenge-term-name').textContent = challenge.term_name || '未知节气';
+        document.getElementById('challenge-term-icon').textContent = challenge.term_icon || '🌱';
+        document.getElementById('challenge-difficulty').textContent = challenge.difficulty || '中等';
+        document.getElementById('challenge-time-limit').textContent = `${challenge.time_limit || 120}秒`;
+
+        const ingredientsContainer = document.getElementById('challenge-ingredients');
+        if (ingredientsContainer && challenge.available_ingredients) {
+            ingredientsContainer.innerHTML = '';
+            challenge.available_ingredients.forEach((ingredient, index) => {
+                const ingredientHtml = `
+                    <div class="ingredient-item" data-ingredient="${ingredient}" data-index="${index}">
+                        <div class="ingredient-icon">🍽️</div>
+                        <div class="ingredient-name">${ingredient}</div>
+                    </div>
+                `;
+                ingredientsContainer.insertAdjacentHTML('beforeend', ingredientHtml);
+            });
+
+            ingredientsContainer.querySelectorAll('.ingredient-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    item.classList.toggle('selected');
+                    this.updateSelectedIngredients();
+                });
+            });
+        }
+
+        this.selectedIngredients = [];
+    }
+
+    updateSelectedIngredients() {
+        this.selectedIngredients = [];
+        document.querySelectorAll('.ingredient-item.selected').forEach(item => {
+            this.selectedIngredients.push(item.dataset.ingredient);
+        });
+    }
+
+    async submitChefChallenge() {
+        if (this.selectedIngredients.length === 0) {
+            alert('请至少选择一种食材');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/games/chef-challenge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    challenge_id: this.currentChefChallenge.challenge_id,
+                    selected_ingredients: this.selectedIngredients,
+                    time_used: 60
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.renderChefChallengeResult(result.data);
+            }
+        } catch (error) {
+            console.error('Submit chef challenge failed:', error);
+            alert('提交失败，请重试');
+        }
+    }
+
+    renderChefChallengeResult(result) {
+        document.getElementById('chef-challenge-content').style.display = 'none';
+        document.getElementById('chef-challenge-result').style.display = 'block';
+
+        document.getElementById('result-score').textContent = result.score || 0;
+        document.getElementById('result-grade').textContent = result.grade || 'C';
+        document.getElementById('result-correct-count').textContent = result.correct_count || 0;
+        document.getElementById('result-total-count').textContent = result.total_count || 0;
+        document.getElementById('result-accuracy').textContent = `${result.accuracy || 0}%`;
+
+        if (result.new_badges && result.new_badges.length > 0) {
+            const newBadgesContainer = document.getElementById('new-badges');
+            if (newBadgesContainer) {
+                newBadgesContainer.style.display = 'block';
+                const badgesGrid = newBadgesContainer.querySelector('.new-badges-grid');
+                if (badgesGrid) {
+                    badgesGrid.innerHTML = '';
+                    result.new_badges.forEach(badge => {
+                        const badgeHtml = `
+                            <div class="new-badge-item">
+                                <div class="badge-icon">${badge.icon || '🏅'}</div>
+                                <div class="badge-name">${badge.name}</div>
+                            </div>
+                        `;
+                        badgesGrid.insertAdjacentHTML('beforeend', badgeHtml);
+                    });
+                }
+            }
+        }
+    }
+
+    async startMatchGame() {
+        document.getElementById('game-menu').style.display = 'none';
+        document.getElementById('match-game').style.display = 'block';
+        document.getElementById('match-game-loading').style.display = 'block';
+        document.getElementById('match-game-content').style.display = 'none';
+
+        try {
+            const response = await fetch('/api/games/match-game', { method: 'GET' });
+            const result = await response.json();
+
+            if (result.success) {
+                this.currentMatchGame = result.data;
+                this.renderMatchGame(result.data);
+            }
+        } catch (error) {
+            console.error('Start match game failed:', error);
+            alert('加载失败，请重试');
+            this.showGameMenu();
+        }
+    }
+
+    renderMatchGame(game) {
+        document.getElementById('match-game-loading').style.display = 'none';
+        document.getElementById('match-game-content').style.display = 'block';
+        document.getElementById('match-game-result').style.display = 'none';
+
+        this.matchGameTimer = game.time_limit || 120;
+        this.matchGamePairs = game.pairs || [];
+        this.matchGameSelectedCards = [];
+        this.matchGameMatchedCount = 0;
+        this.matchGameStartTime = Date.now();
+
+        this.updateMatchGameTimer();
+        this.matchGameTimerInterval = setInterval(() => {
+            this.matchGameTimer--;
+            this.updateMatchGameTimer();
+            if (this.matchGameTimer <= 0) {
+                this.endMatchGame();
+            }
+        }, 1000);
+
+        this.renderMatchGameCards(game.terms, game.ingredients);
+    }
+
+    renderMatchGameCards(terms, ingredients) {
+        const gameBoard = document.querySelector('.match-game-board');
+        if (!gameBoard) return;
+
+        gameBoard.innerHTML = '';
+
+        const allCards = [];
+        terms.forEach(term => {
+            allCards.push({
+                type: 'term',
+                id: `term_${term.key}`,
+                term: term,
+                displayText: term.name,
+                icon: term.icon || '🌱'
+            });
+        });
+
+        ingredients.forEach(ingredient => {
+            allCards.push({
+                type: 'ingredient',
+                id: `ingredient_${ingredient.name}`,
+                ingredient: ingredient,
+                displayText: ingredient.name,
+                icon: '🍽️'
+            });
+        });
+
+        this.shuffleArray(allCards);
+
+        this.matchGameAllCards = allCards;
+
+        allCards.forEach(card => {
+            const cardHtml = `
+                <div class="match-card" data-card-id="${card.id}" data-type="${card.type}" data-matched="false">
+                    <div class="match-card-face match-card-front">
+                        <span class="card-front-icon">${card.icon}</span>
+                        <span class="card-front-text">${card.displayText}</span>
+                    </div>
+                </div>
+            `;
+            gameBoard.insertAdjacentHTML('beforeend', cardHtml);
+        });
+
+        gameBoard.querySelectorAll('.match-card').forEach(card => {
+            card.addEventListener('click', () => this.handleMatchCardClick(card));
+        });
+    }
+
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    handleMatchCardClick(cardElement) {
+        const cardId = cardElement.dataset.cardId;
+        const isMatched = cardElement.dataset.matched === 'true';
+        const isSelected = cardElement.classList.contains('selected');
+
+        if (isMatched || isSelected) return;
+
+        if (this.matchGameSelectedCards.length >= 2) return;
+
+        cardElement.classList.add('selected');
+        this.matchGameSelectedCards.push(cardId);
+
+        if (this.matchGameSelectedCards.length === 2) {
+            setTimeout(() => this.checkMatch(), 500);
+        }
+    }
+
+    checkMatch() {
+        const [card1Id, card2Id] = this.matchGameSelectedCards;
+        const card1 = this.matchGameAllCards.find(c => c.id === card1Id);
+        const card2 = this.matchGameAllCards.find(c => c.id === card2Id);
+
+        let isMatch = false;
+
+        if (card1.type === 'term' && card2.type === 'ingredient') {
+            isMatch = this.checkTermIngredientMatch(card1.term, card2.ingredient);
+        } else if (card1.type === 'ingredient' && card2.type === 'term') {
+            isMatch = this.checkTermIngredientMatch(card2.term, card1.ingredient);
+        }
+
+        const card1Element = document.querySelector(`[data-card-id="${card1Id}"]`);
+        const card2Element = document.querySelector(`[data-card-id="${card2Id}"]`);
+
+        if (isMatch) {
+            card1Element.classList.add('matched');
+            card2Element.classList.add('matched');
+            card1Element.dataset.matched = 'true';
+            card2Element.dataset.matched = 'true';
+            this.matchGameMatchedCount++;
+
+            const totalPairs = this.matchGamePairs.length;
+            document.getElementById('match-game-matched').textContent = this.matchGameMatchedCount;
+            document.getElementById('match-game-total').textContent = totalPairs;
+
+            if (this.matchGameMatchedCount >= totalPairs) {
+                this.endMatchGame();
+            }
+        } else {
+            card1Element.classList.remove('selected');
+            card2Element.classList.remove('selected');
+        }
+
+        this.matchGameSelectedCards = [];
+    }
+
+    checkTermIngredientMatch(term, ingredient) {
+        const matchedPair = this.matchGamePairs.find(pair => 
+            pair.term_key === term.key && pair.ingredients.includes(ingredient.name)
+        );
+        return !!matchedPair;
+    }
+
+    updateMatchGameTimer() {
+        const minutes = Math.floor(this.matchGameTimer / 60);
+        const seconds = this.matchGameTimer % 60;
+        document.getElementById('match-game-timer').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    async endMatchGame() {
+        if (this.matchGameTimerInterval) {
+            clearInterval(this.matchGameTimerInterval);
+        }
+
+        const timeUsed = Math.floor((Date.now() - this.matchGameStartTime) / 1000);
+        const accuracy = this.matchGamePairs.length > 0 ? 
+            Math.round((this.matchGameMatchedCount / this.matchGamePairs.length) * 100) : 0;
+
+        try {
+            const response = await fetch('/api/games/match-game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    game_id: this.currentMatchGame.game_id,
+                    matched_pairs: this.matchGameMatchedCount,
+                    time_used: timeUsed,
+                    accuracy: accuracy
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.renderMatchGameResult(result.data);
+            }
+        } catch (error) {
+            console.error('End match game failed:', error);
+        }
+    }
+
+    renderMatchGameResult(result) {
+        document.getElementById('match-game-content').style.display = 'none';
+        document.getElementById('match-game-result').style.display = 'block';
+
+        document.getElementById('match-result-score').textContent = result.score || 0;
+        document.getElementById('match-result-matched').textContent = result.matched_pairs || 0;
+        document.getElementById('match-result-time').textContent = result.time_used || 0;
+    }
+
+    async showBadgesCollection() {
+        document.getElementById('game-menu').style.display = 'none';
+        document.getElementById('badges-collection').style.display = 'block';
+
+        try {
+            const response = await fetch('/api/games/badges');
+            const result = await response.json();
+
+            if (result.success) {
+                this.renderBadgesCollection(result.data);
+            }
+        } catch (error) {
+            console.error('Load badges failed:', error);
+        }
+    }
+
+    renderBadgesCollection(data) {
+        const grid = document.querySelector('.badges-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+
+        const badges = data.badges || data;
+        badges.forEach(badge => {
+            const lockedClass = badge.unlocked ? '' : 'locked';
+            const badgeHtml = `
+                <div class="badge-item ${lockedClass}">
+                    <div class="badge-icon">${badge.icon || '🏅'}</div>
+                    <div class="badge-name">${badge.name}</div>
+                    <div class="badge-desc">${badge.description || ''}</div>
+                </div>
+            `;
+            grid.insertAdjacentHTML('beforeend', badgeHtml);
+        });
     }
 }
 
